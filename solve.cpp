@@ -1,8 +1,10 @@
 #include <iostream>
 #include "solve.h"
 
-Solve::Solve() {
-	// std::cout << "Solve()" << std::endl;
+Solve::Solve(mesh_list& meshs) {
+	for (std::unique_ptr<Mesh>& msh : meshs) {
+		_meshs.push_back(std::move(msh));
+	}
 }
 
 Solve::~Solve() {

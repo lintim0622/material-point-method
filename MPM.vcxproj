@@ -141,23 +141,18 @@
   <ItemGroup>
     <ClCompile Include="algebra.cpp" />
     <ClCompile Include="constant.cpp" />
-    <ClCompile Include="element.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mesh.cpp" />
-    <ClCompile Include="node.cpp" />
-    <ClCompile Include="particle.cpp" />
     <ClCompile Include="solve.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="algebra.h" />
     <ClInclude Include="constant.h" />
-    <ClInclude Include="element.h" />
     <ClInclude Include="mesh.h" />
-    <ClInclude Include="node.h" />
-    <ClInclude Include="particle.h" />
     <ClInclude Include="solve.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="NODAL POSITION.txt.txt" />
     <Text Include="PARTICLE INFO A.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
