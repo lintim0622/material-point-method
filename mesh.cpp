@@ -71,11 +71,23 @@ Element::~Element() {
 
 }
 
+bool Element::contains(const Particle& particle) const {
+    // Use a simple bounding box check for demonstration purposes
+    double minX = std::min({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
+    double maxX = std::max({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
+    double minY = std::min({ n1->xn[1], n2->xn[1], n3->xn[1], n4->xn[1] });
+    double maxY = std::max({ n1->xn[1], n2->xn[1], n3->xn[1], n4->xn[1] });
+
+    return particle.xp[0] >= minX && particle.xp[0] <= maxX &&
+           particle.xp[1] >= minY && particle.xp[1] <= maxY;
+}
+
 // ****************************    MESH    ***************************************
 Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material) {
     initParticleInfo(particleFile, material);
     initNodeInfo(nodeFile);
     createElements();
+    createElementParticleMap();
 }
 
 Mesh::~Mesh() {
@@ -127,6 +139,30 @@ void Mesh::createElements() {
             elements.push_back(std::move(e));
         }
     }
+}
+
+void Mesh::createElementParticleMap() {
+    for (int i = 0; i < particles.size(); ++i) {
+        for (int j = 0; j < elements.size(); ++j) {
+            if (elements[j].contains(particles[i])) {
+                particleElementMap[i] = j;
+                break;
+            }
+        }
+    }
+}
+
+Element* Mesh::findElementForParticle(const Particle& particle) {
+    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
+        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
+    });
+    if (it != particles.end()) {
+        int particleIndex = std::distance(particles.begin(), it);
+        if (particleElementMap.find(particleIndex) != particleElementMap.end()) {
+            return &elements[particleElementMap[particleIndex]];
+        }
+    }
+    return nullptr;
 }
 
 void Mesh::initNodeInfo(const std::string& filename) {

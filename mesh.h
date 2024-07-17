@@ -3,7 +3,9 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 #include <memory>
+#include <map>
 
 #include "algebra.h"
 #include "constant.h"
@@ -54,6 +56,8 @@ public:
 	Element(Element&&) noexcept = default;
 	Element& operator=(Element&&) noexcept = default;
 
+	bool contains(const Particle& particle) const;
+
 	std::unique_ptr<Node> n1;
 	std::unique_ptr<Node> n2;
 	std::unique_ptr<Node> n3;
@@ -69,9 +73,13 @@ public:
 	void showNodeInitInfo() const;
 	void showElementInfo() const;
 
+	void createElementParticleMap();
+	Element* findElementForParticle(const Particle& particle);
+
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
+	std::map<int, int> particleElementMap; // Map particle index to element index
 
 private:
 	// read initial particle information and calculate
