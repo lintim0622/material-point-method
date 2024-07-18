@@ -17,9 +17,7 @@ Particle::Particle() :
 }
 
 // Destructor to clean up resources
-Particle::~Particle() {
-    // std::cout << "~Particle()" << std::endl;
-}
+Particle::~Particle() {}
 
 void Particle::mass(const Material& material) {
     mp = material.rho * Vol;
@@ -27,7 +25,6 @@ void Particle::mass(const Material& material) {
 
 void Particle::momentum() {
     Pp = mp * vp;
-    // std::cout << "momentum()" << std::endl;
 }
 
 void Particle::show() const {
@@ -62,9 +59,7 @@ Node::~Node() {
 // ****************************    ELEMENT    ***************************************
 Element::Element() :n1{ nullptr }, n2{ nullptr }, n3{ nullptr }, n4{ nullptr } {}
 
-Element::~Element() {
-
-}
+Element::~Element() {}
 
 bool Element::contains(const Particle& particle) const {
     // Use a simple bounding box check for demonstration purposes
@@ -73,8 +68,8 @@ bool Element::contains(const Particle& particle) const {
     double minY = std::min({ n1->xn[1], n2->xn[1], n3->xn[1], n4->xn[1] });
     double maxY = std::max({ n1->xn[1], n2->xn[1], n3->xn[1], n4->xn[1] });
 
-    return particle.xp[0] >= minX && particle.xp[0] <= maxX &&
-           particle.xp[1] >= minY && particle.xp[1] <= maxY;
+    return particle.xp[0] >= minX && particle.xp[0] < maxX &&
+           particle.xp[1] >= minY && particle.xp[1] < maxY;
 }
 
 // ****************************    MESH    ***************************************
@@ -149,18 +144,18 @@ void Mesh::createElementParticleMap() {
     }
 }
 
-Element* Mesh::findElementForParticle(const Particle& particle) {
-    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
-        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
-    });
-    if (it != particles.end()) {
-        int particleIndex = std::distance(particles.begin(), it);
-        if (pem.find(particleIndex) != pem.end()) {
-            return &elements[pem[particleIndex]];
-        }
-    }
-    return nullptr;
-}
+//Element* Mesh::findElementForParticle(const Particle& particle) {
+//    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
+//        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
+//    });
+//    if (it != particles.end()) {
+//        int particleIndex = std::distance(particles.begin(), it);
+//        if (pem.find(particleIndex) != pem.end()) {
+//            return &elements[pem[particleIndex]];
+//        }
+//    }
+//    return nullptr;
+//}
 
 void Mesh::initNodeInfo(const std::string& filename) {
     std::ifstream infile(filename);

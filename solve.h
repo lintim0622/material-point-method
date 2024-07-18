@@ -15,6 +15,7 @@ public:
 	void nodalSolution();
 	void nodeToParticle();
 	void updateParticles();
+	void resetNode();
 
 private:
 	mesh_list _meshs;

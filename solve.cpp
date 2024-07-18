@@ -9,21 +9,32 @@ Solve::Solve(mesh_list& meshs) {
 }
 
 Solve::~Solve() {
-	// std::cout << "~Solve()" << std::endl;
+
 }
 
 void Solve::particleToNode() {
-	// std::cout << "particleToNode()" << std::endl;
+	for (std::unique_ptr<Mesh>& msh : _meshs) {
+		for (auto it : msh->pem) {
+			const double& xo = msh->elements[it.second].n1->xn[0];
+			const double& yo = msh->elements[it.second].n1->xn[1];
+			static const double& l = UNITGRID, h = UNITGRID;
+			// std::cout << xo << ", " << yo << std::endl;
+		}
+	}
 }
 
 void Solve::nodalSolution() {
-	// std::cout << "nodalSolution()" << std::endl;
+
 }
 
 void Solve::nodeToParticle() {
-	// std::cout << "nodeToParticle()" << std::endl;
+
 }
 
 void Solve::updateParticles() {
-	// std::cout << "updateParticles()" << std::endl;
+
+}
+
+void Solve::resetNode() {
+
 }

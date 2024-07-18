@@ -81,7 +81,7 @@ public:
 	void showElementInfo() const;
 
 	void createElementParticleMap();
-	Element* findElementForParticle(const Particle& particle);
+	// Element* findElementForParticle(const Particle& particle);
 
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
