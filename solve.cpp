@@ -5,6 +5,7 @@ Solve::Solve(mesh_list& meshs) {
 	for (std::unique_ptr<Mesh>& msh : meshs) {
 		_meshs.push_back(std::move(msh));
 	}
+	endTime = 0.0;
 }
 
 Solve::~Solve() {

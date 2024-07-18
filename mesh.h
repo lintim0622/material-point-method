@@ -58,15 +58,22 @@ public:
 
 	bool contains(const Particle& particle) const;
 
-	std::unique_ptr<Node> n1;
-	std::unique_ptr<Node> n2;
-	std::unique_ptr<Node> n3;
-	std::unique_ptr<Node> n4;
+	Node* n1;
+	Node* n2;
+	Node* n3;
+	Node* n4;
 };
 
 class Mesh {
 public:
 	Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material);
+
+	Mesh(const Mesh&) = delete;
+	Mesh& operator=(const Mesh&) = delete;
+
+	Mesh(Mesh&&) noexcept = default;
+	Mesh& operator=(Mesh&&) noexcept = default;
+
 	~Mesh();
 
 	void showParticleInitInfo() const;
@@ -79,7 +86,10 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	std::map<int, int> particleElementMap; // Map particle index to element index
+	const Material* mat;
+
+	// Map particle index to element index
+	std::map<int, int> pem; 
 
 private:
 	// read initial particle information and calculate

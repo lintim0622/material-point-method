@@ -1,6 +1,9 @@
 #pragma once
 
+#include <iostream>
 #include <string>
+#include <cmath>
+#include <cstdlib>
 
 static const double UNITGRID = 0.25;
 
@@ -12,7 +15,11 @@ public:
 	Material(double rho, double K, double G);
 	~Material();
 
+	void verify_time_step(double dt);
+
 	double rho;
 	double K;
 	double G;
+	double E;
+	double v;
 };

@@ -8,6 +8,8 @@ public:
 	Solve(mesh_list& meshs);
 	~Solve();
 
+	inline void setSimulationTime(double et) { endTime = et; }
+
 	// solution process
 	void particleToNode();
 	void nodalSolution();
@@ -16,4 +18,5 @@ public:
 
 private:
 	mesh_list _meshs;
+	double endTime;
 };

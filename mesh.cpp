@@ -60,12 +60,7 @@ Node::~Node() {
 }
 
 // ****************************    ELEMENT    ***************************************
-Element::Element() {
-    n1 = std::make_unique<Node>();
-    n2 = std::make_unique<Node>();
-    n3 = std::make_unique<Node>();
-    n4 = std::make_unique<Node>();
-}
+Element::Element() :n1{ nullptr }, n2{ nullptr }, n3{ nullptr }, n4{ nullptr } {}
 
 Element::~Element() {
 
@@ -83,7 +78,9 @@ bool Element::contains(const Particle& particle) const {
 }
 
 // ****************************    MESH    ***************************************
-Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material) {
+Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material)
+    : mat{ &material }
+{
     initParticleInfo(particleFile, material);
     initNodeInfo(nodeFile);
     createElements();
@@ -132,10 +129,10 @@ void Mesh::createElements() {
             int n4_id = n3_id + 1;
 
             Element e{};
-            e.n1 = std::make_unique<Node>(nodes[n1_id]);
-            e.n2 = std::make_unique<Node>(nodes[n2_id]);
-            e.n3 = std::make_unique<Node>(nodes[n4_id]);
-            e.n4 = std::make_unique<Node>(nodes[n3_id]);
+            e.n1 = &nodes[n1_id];
+            e.n2 = &nodes[n2_id];
+            e.n3 = &nodes[n4_id];
+            e.n4 = &nodes[n3_id];
             elements.push_back(std::move(e));
         }
     }
@@ -145,7 +142,7 @@ void Mesh::createElementParticleMap() {
     for (int i = 0; i < particles.size(); ++i) {
         for (int j = 0; j < elements.size(); ++j) {
             if (elements[j].contains(particles[i])) {
-                particleElementMap[i] = j;
+                pem[i] = j;
                 break;
             }
         }
@@ -158,8 +155,8 @@ Element* Mesh::findElementForParticle(const Particle& particle) {
     });
     if (it != particles.end()) {
         int particleIndex = std::distance(particles.begin(), it);
-        if (particleElementMap.find(particleIndex) != particleElementMap.end()) {
-            return &elements[particleElementMap[particleIndex]];
+        if (pem.find(particleIndex) != pem.end()) {
+            return &elements[pem[particleIndex]];
         }
     }
     return nullptr;
