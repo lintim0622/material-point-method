@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include "constant.h"
 
 class Vector2D {
 public:

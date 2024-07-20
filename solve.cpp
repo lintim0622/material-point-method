@@ -15,7 +15,7 @@ Solve::~Solve()
 
 }
 
-void Solve::algorithm()
+void Solve::algorithm(double nowTime)
 {
     // for each mesh
     for (std::unique_ptr<Mesh>& msh : _meshs)
@@ -23,7 +23,7 @@ void Solve::algorithm()
         this->calculateParticleInfo(msh);
         this->particleToNode(msh);
         this->nodalSolution(msh);
-        this->nodeToParticle(msh);
+        this->nodeToParticle(msh, nowTime);
         this->resetNode(msh);
     }
 }
@@ -149,7 +149,7 @@ void Solve::nodalSolution(std::unique_ptr<Mesh>& msh)
     }
 }
 
-void Solve::nodeToParticle(std::unique_ptr<Mesh>& msh)
+void Solve::nodeToParticle(std::unique_ptr<Mesh>& msh, double nowTime)
 {
     for (const std::pair<const int, int>& it : msh->pem)
     {
@@ -189,6 +189,21 @@ void Solve::nodeToParticle(std::unique_ptr<Mesh>& msh)
         ip.ineps[0] = depx;
         ip.ineps[1] = depy;
         ip.ineps[2] = dexyp;
+
+        if (ip.xp[0] > MAXBC || ip.xp[0] < MINBC) {
+            std::cout << "t = " << nowTime << std::endl;
+            std::cout << "particle " << ip.pid << std::endl;
+            std::cout << "xp = [" << std::fixed << std::setprecision(3) 
+                      << ip.xp[0] << ", " << ip.xp[1] << "]" << std::endl;
+            throw Interpolate_Error("out of boundary for x direction!!!");
+        }
+        if (ip.xp[1] > MAXBC || ip.xp[1] < MINBC) {
+            std::cout << "t = " << nowTime << std::endl;
+            std::cout << "particle " << ip.pid << std::endl;
+            std::cout << "xp = [" << std::fixed << std::setprecision(3) 
+                      << ip.xp[0] << ", " << ip.xp[1] << "]" << std::endl;
+            throw Interpolate_Error("out of boundary for y direction!!!");
+        }
     }
 }
 
