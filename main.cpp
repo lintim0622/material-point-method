@@ -20,38 +20,21 @@ int main() {
     sol.setSimulationTime(ENDTIME);
 
     // run
-    double t = 0.0;
-    int step = 0;
-    int print_interval = static_cast<int>(round(1 / DT) / 10);
-    while (t <= ENDTIME) {
+    //double t = 0.0;
+    //int step = 0;
+    //int print_interval = static_cast<int>(round(1 / DT) / 10);
+    //while (t <= ENDTIME)
+    //{
+    //    std::cout << "now time: " << t << std::endl;
 
-        std::cout << "now time: " << t << std::endl;
+    //    sol.algorithm();
 
-        // particle information
-        sol.calculateParticleInfo();
-
-        // particle to node
-        sol.particleToNode();
-
-        // nodal solution
-        sol.nodalSolution();
-
-        // node to particle
-        sol.nodeToParticle();
-
-        // update particle
-        sol.updateParticles();
-
-        // reset node
-        sol.resetNode();
-
-      /*  if (step % print_interval == 0) {
-            std::cout << "t = " << t << std::endl;
-        }*/
-        t += DT;
-        step++;
-    }
-
+    //  /*  if (step % print_interval == 0) {
+    //        std::cout << "t = " << t << std::endl;
+    //    }*/
+    //    t += DT;
+    //    step++;
+    //}
 
     std::cout << "end" << std::endl;
     return 0;

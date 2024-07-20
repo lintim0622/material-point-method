@@ -31,6 +31,9 @@ public:
     double& operator[](int index);
     const double& operator[](int index) const;
 
+    // reset vector
+    void setZero();
+
 private:
     double _x;
     double _y;

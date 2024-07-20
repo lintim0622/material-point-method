@@ -11,14 +11,17 @@ public:
 	inline void setSimulationTime(double et) { endTime = et; }
 
 	// solution process
-	void calculateParticleInfo();
-	void particleToNode();
-	void nodalSolution();
-	void nodeToParticle();
-	void updateParticles();
-	void resetNode();
+	void algorithm();
+	
 
 private:
+	void calculateParticleInfo(std::unique_ptr<Mesh>& msh);
+	void particleToNode(std::unique_ptr<Mesh>& msh);
+	void nodalSolution(std::unique_ptr<Mesh>& msh);
+	void nodeToParticle(std::unique_ptr<Mesh>& msh);
+	void updateParticles(std::unique_ptr<Mesh>& msh);
+	void resetNode(std::unique_ptr<Mesh>& msh);
+
 	mesh_list _meshs;
 	double endTime;
 };

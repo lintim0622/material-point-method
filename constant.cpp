@@ -13,12 +13,14 @@ Material::Material(double rho, double K, double G) :
 
 Material::~Material() {}
 
-void Material::verify_time_step(double dt) {
+void Material::verify_time_step(double dt)
+{
     // P wave velocity->vel_p
     double M = K + 4.0 * G / 3.0;
     double vel_p = std::sqrt(M / rho);
     double dt_critical = UNITGRID / (10.0 * vel_p);
-    if (dt > dt_critical) {
+    if (dt > dt_critical)
+    {
         std::cout << "dt = " << dt << std::endl;
         std::cout << "dt_critical = " << dt_critical << std::endl;
         std::cout << "need reset MPM time step" << std::endl;

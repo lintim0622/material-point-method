@@ -7,7 +7,7 @@
 
 static const double UNITGRID = 0.25;
 static const double DT = 1e-4;
-static const double ENDTIME = 2e-4;
+static const double ENDTIME = 0.5;
 
 static const double RHO = 960.0;
 static const double K = 0.003E+9;

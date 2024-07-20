@@ -3,8 +3,8 @@
 // ****************************    PARTICLE    ***************************************
 // Constructor to initialize member variables
 Particle::Particle() :
-    pid{ 0 }, Vol{ 0.0 }, mp{ 0.0 }, xp{}, vp{}, Pp{}, bp{}, 
-    ep{ 0.0, 0.0, 0.0 }, ssp{ 0.0, 0.0, 0.0 }, 
+    pid{ 0 }, Vol{ 0.0 }, mp{ 0.0 }, xp{}, vp{}, Pp{}, bp{},
+    ep{ 0.0, 0.0, 0.0 }, ssp{ 0.0, 0.0, 0.0 }, ineps{ 0.0, 0.0, 0.0 }, 
     N1{ 0.0 }, N2{ 0.0 }, N3{ 0.0 }, N4{ 0.0 },
     dN1{}, dN2{}, dN3{}, dN4{}
 {
@@ -14,16 +14,18 @@ Particle::Particle() :
 // Destructor to clean up resources
 Particle::~Particle() {}
 
-void Particle::calculateMass(const Material& material) {
+void Particle::calculateMass(const Material& material)
+{
     mp = material.rho * Vol;
 }
 
-void Particle::calculateMomentum() {
+void Particle::calculateMomentum()
+{
     Pp = mp * vp;
 }
 
-void Particle::calculateSpecificStress(const Material& material) {
-
+void Particle::calculateSpecificStress(const Material& material)
+{
     double sp[3]{};
     sp[0] = material.E1 * ep[0] + material.E2 * ep[1];
     sp[1] = material.E2 * ep[0] + material.E1 * ep[1];
@@ -32,10 +34,10 @@ void Particle::calculateSpecificStress(const Material& material) {
     ssp[0] = sp[0] / material.rho;
     ssp[1] = sp[1] / material.rho;
     ssp[2] = sp[2] / material.rho;
-
 }
 
-void Particle::show() const {
+void Particle::show() const
+{
     std::cout << "id : " << pid << std::endl;
     std::cout << "Volume : " << Vol << std::endl;
     std::cout << "mass : " << mp << std::endl;
@@ -48,8 +50,8 @@ void Particle::show() const {
 // ****************************    NODE    ***************************************
 // Constructor to initialize member variables
 Node::Node() :
-    nid{ 0 }, mn{ 0.0 }, xn{}, vn{}, pn{}, 
-    fint{}, fext{}, bn{}, normal{}
+    nid{ 0 }, mn{ 0.0 }, xn{}, vn{}, an{}, pn{},
+    fint{}, fext{}, ftot{}, bn{}, normal{}
 {
     // Initialization list is used to set initial values for member variables
 }
@@ -65,8 +67,8 @@ Element::Element() :n1{ nullptr }, n2{ nullptr }, n3{ nullptr }, n4{ nullptr } {
 
 Element::~Element() {}
 
-bool Element::contains(const Particle& particle) const {
-
+bool Element::contains(const Particle& particle) const
+{
     // Use a simple bounding box check for demonstration purposes
     double minX = std::min({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
     double maxX = std::max({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
@@ -92,12 +94,12 @@ Mesh::~Mesh()
     // std::cout << "The mesh has been deleted\n";
 }
 
-void Mesh::initParticleInfo(const std::string& filePath, const Material& material) {
-
+void Mesh::initParticleInfo(const std::string& filePath, const Material& material)
+{
     std::ifstream file(filePath);
     std::string line;
-    while (std::getline(file, line)) {
-
+    while (std::getline(file, line))
+    {
         // Skip lines that start with #
         if (line.empty() || line[0] == '#')
             continue;
@@ -120,12 +122,14 @@ void Mesh::initParticleInfo(const std::string& filePath, const Material& materia
     file.close();
 }
 
-void Mesh::createElements() {
-
+void Mesh::createElements()
+{
     // Assume the grid is square
     int nodesPerSide = static_cast<int>(sqrt(nodes.size())) - 1;
-    for (int i = 0; i < nodesPerSide; ++i) {
-        for (int j = 0; j < nodesPerSide; ++j) {
+    for (int i = 0; i < nodesPerSide; ++i)
+    {
+        for (int j = 0; j < nodesPerSide; ++j)
+        {
             int n1_id = i * (nodesPerSide + 1) + j;
             int n2_id = n1_id + 1;
             int n3_id = (i + 1) * (nodesPerSide + 1) + j;
@@ -141,13 +145,14 @@ void Mesh::createElements() {
     }
 }
 
-void Mesh::createElementParticleMap() {
-
-    for (int i = 0; i < particles.size(); ++i) {
-
-        for (int j = 0; j < elements.size(); ++j) {
-
-            if (elements[j].contains(particles[i])) {
+void Mesh::createElementParticleMap()
+{
+    for (int i = 0; i < particles.size(); ++i)
+    {
+        for (int j = 0; j < elements.size(); ++j)
+        {
+            if (elements[j].contains(particles[i]))
+            {
                 pem[i] = j;
                 break;
             }
@@ -155,13 +160,19 @@ void Mesh::createElementParticleMap() {
     }
 }
 
-//Element* Mesh::findElementForParticle(const Particle& particle) {
-// 
+void Mesh::clearMapId()
+{
+    pem.clear();
+}
+
+//Element* Mesh::findElementForParticle(const Particle& particle)
+// {
 //    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
 //        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
 //    });
 // 
-//    if (it != particles.end()) {
+//    if (it != particles.end())
+//    {
 //        int particleIndex = std::distance(particles.begin(), it);
 //        if (pem.find(particleIndex) != pem.end()) {
 //            return &elements[pem[particleIndex]];
@@ -170,10 +181,11 @@ void Mesh::createElementParticleMap() {
 //    return nullptr;
 //}
 
-void Mesh::initNodeInfo(const std::string& filename) {
-
+void Mesh::initNodeInfo(const std::string& filename)
+{
     std::ifstream infile(filename);
-    if (!infile) {
+    if (!infile)
+    {
         std::cerr << "Cannot open file: " << filename << std::endl;
         return;
     }
@@ -181,7 +193,8 @@ void Mesh::initNodeInfo(const std::string& filename) {
     std::string line;
     int nodeCount;
     // Read the total number of nodes
-    if (!(infile >> nodeCount)) {
+    if (!(infile >> nodeCount))
+    {
         std::cerr << "Error reading the number of nodes from file: " << filename << std::endl;
         return;
     }
@@ -196,7 +209,8 @@ void Mesh::initNodeInfo(const std::string& filename) {
 
     // Read node data
     int id = 0;
-    while (std::getline(infile, line)) {
+    while (std::getline(infile, line))
+    {
         std::istringstream iss(line);
         Node n{};
         if (iss >> n.xn[0] >> n.xn[1]) {
@@ -207,36 +221,40 @@ void Mesh::initNodeInfo(const std::string& filename) {
     infile.close();
 }
 
-void Mesh::showParticleInitInfo() const {
-
-    for (const Particle& p : particles) {
+void Mesh::showParticleInitInfo() const
+{
+    for (const Particle& p : particles)
+    {
         std::cout << "Particle ID: " << p.pid << "\n"
-            << "Volume: " << p.Vol << "\n"
-            << "Position: (" << p.xp[0] << ", " << p.xp[1] << ")\n"
-            << "Velocity: (" << p.vp[0] << ", " << p.vp[1] << ")\n"
-            << "Momentum: (" << p.Pp[0] << ", " << p.Pp[1] << ")\n"
-            << "Body Force: (" << p.bp[0] << ", " << p.bp[1] << ")\n"
-            << "Strain: (" << p.ep[0] << ", " << p.ep[1] << ", " << p.ep[2] << ")\n"
-            << std::endl;
+                  << "Volume: " << p.Vol << "\n"
+                  << "Position: (" << p.xp[0] << ", " << p.xp[1] << ")\n"
+                  << "Velocity: (" << p.vp[0] << ", " << p.vp[1] << ")\n"
+                  << "Momentum: (" << p.Pp[0] << ", " << p.Pp[1] << ")\n"
+                  << "Body Force: (" << p.bp[0] << ", " << p.bp[1] << ")\n"
+                  << "Strain: (" << p.ep[0] << ", " << p.ep[1] << ", " << p.ep[2] << ")\n"
+                  << std::endl;
     }
 }
 
-void Mesh::showNodeInitInfo() const {
-
-    for (const Node& node : nodes) {
-        std::cout << "Node ID: " << node.nid << ", Position: (" << node.xn[0] << ", " << node.xn[1] << ")\n";
+void Mesh::showNodeInitInfo() const
+{
+    for (const Node& node : nodes)
+    {
+        std::cout << "Node ID: " << node.nid 
+                  << ", Position: (" << node.xn[0] << ", " << node.xn[1] << ")\n";
     }
 }
 
-void Mesh::showElementInfo() const {
-
+void Mesh::showElementInfo() const
+{
     int eid = 0;
-    for (const Element& elem : elements) {
+    for (const Element& elem : elements)
+    {
         std::cout << "Element " << eid++
-            << " -node: "
-            << elem.n1->nid << " (" << elem.n1->xn[0] << ", " << elem.n1->xn[1] << "), "
-            << elem.n2->nid << " (" << elem.n2->xn[0] << ", " << elem.n2->xn[1] << "), "
-            << elem.n3->nid << " (" << elem.n3->xn[0] << ", " << elem.n3->xn[1] << "), "
-            << elem.n4->nid << " (" << elem.n4->xn[0] << ", " << elem.n4->xn[1] << ")\n";
+                  << " -node: "
+                  << elem.n1->nid << " (" << elem.n1->xn[0] << ", " << elem.n1->xn[1] << "), "
+                  << elem.n2->nid << " (" << elem.n2->xn[0] << ", " << elem.n2->xn[1] << "), "
+                  << elem.n3->nid << " (" << elem.n3->xn[0] << ", " << elem.n3->xn[1] << "), "
+                  << elem.n4->nid << " (" << elem.n4->xn[0] << ", " << elem.n4->xn[1] << ")\n";
     }
 }

@@ -32,6 +32,7 @@ public:
 	Vector2D bp; // body force
 	double ep[3]; // strain
 	double ssp[3]; // specific stress
+	double ineps[3]; // Increment strain tensor
 
 	// shape function (QUAD4)
 	double N1, N2, N3, N4;
@@ -47,9 +48,11 @@ public:
 	double mn; // mass
 	Vector2D xn; // position
 	Vector2D vn; // velocity
+	Vector2D an; // acceleration
 	Vector2D pn; // momentum
 	Vector2D fint; // internal force
 	Vector2D fext; // external force
+	Vector2D ftot; // external force
 	Vector2D bn; // body force
 	Vector2D normal; // normal vector
 };
@@ -90,6 +93,7 @@ public:
 	void showElementInfo() const;
 
 	void createElementParticleMap();
+	void clearMapId();
 	// Element* findElementForParticle(const Particle& particle);
 
 	std::vector<Particle> particles;
