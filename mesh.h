@@ -10,13 +10,17 @@
 #include "algebra.h"
 #include "constant.h"
 
+const double dxi{ 2.0 / UNITGRID };
+const double deta{ 2.0 / UNITGRID };
+
 class Particle {
 public:
 	Particle();
 	~Particle();
 
-	void mass(const Material& material);
-	void momentum();
+	void calculateMass(const Material& material);
+	void calculateMomentum();
+	void calculateSpecificStress(const Material& material);
 	void show() const;
 
 	int pid; // id
@@ -27,7 +31,11 @@ public:
 	Vector2D Pp; // momentum
 	Vector2D bp; // body force
 	double ep[3]; // strain
-	double sp[3]; // stress
+	double ssp[3]; // specific stress
+
+	// shape function (QUAD4)
+	double N1, N2, N3, N4;
+	Vector2D dN1, dN2, dN3, dN4;
 };
 
 class Node {
@@ -43,6 +51,7 @@ public:
 	Vector2D fint; // internal force
 	Vector2D fext; // external force
 	Vector2D bn; // body force
+	Vector2D normal; // normal vector
 };
 
 class Element {
@@ -86,7 +95,7 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	const Material* mat;
+	const Material* material;
 
 	// Map particle index to element index
 	std::map<int, int> pem; 
@@ -101,3 +110,41 @@ private:
 	// initial mesh
 	void createElements();
 };
+
+// shape function (QUAD4)
+inline double shapeN1(const double xi, const double eta) {
+	return 0.5 * (1.0 - xi) * 0.5 * (1.0 - eta);
+}
+inline double shapeN2(const double xi, const double eta) {
+	return 0.5 * (1.0 + xi) * 0.5 * (1.0 - eta);
+}
+inline double shapeN3(const double xi, const double eta) {
+	return 0.5 * (1.0 + xi) * 0.5 * (1.0 + eta);
+}
+inline double shapeN4(const double xi, const double eta) {
+	return 0.5 * (1.0 - xi) * 0.5 * (1.0 + eta);
+}
+inline double shapedN1x(const double eta) {
+	return (0.5 * (-1.0) * dxi) * 0.5 * (1.0 - eta);
+}
+inline double shapedN1y(const double xi) {
+	return (0.5 * (-1.0) * deta) * (0.5 * (1.0 - xi));
+}
+inline double shapedN2x(const double eta) {
+	return (0.5 * (1.0) * dxi) * (0.5 * (1.0 - eta));
+}
+inline double shapedN2y(const double xi) {
+	return (0.5 * (-1.0) * deta) * (0.5 * (1.0 + xi));
+}
+inline double shapedN3x(const double eta) {
+	return (0.5 * (1.0) * dxi) * (0.5 * (1.0 + eta));
+}
+inline double shapedN3y(const double xi) {
+	return (0.5 * (1.0) * deta) * (0.5 * (1.0 + xi));
+}
+inline double shapedN4x(const double eta) {
+	return (0.5 * (-1.0) * dxi) * (0.5 * (1.0 + eta));
+}
+inline double shapedN4y(const double xi) {
+	return (0.5 * (1.0) * deta) * (0.5 * (1.0 - xi));
+}

@@ -3,28 +3,36 @@
 // ****************************    PARTICLE    ***************************************
 // Constructor to initialize member variables
 Particle::Particle() :
-    pid{ 0 },
-    Vol{ 0.0 },
-    mp{ 0.0 },
-    xp{},
-    vp{},
-    Pp{},
-    bp{},
-    ep{ 0.0, 0.0, 0.0 },
-    sp{ 0.0, 0.0, 0.0 } {
+    pid{ 0 }, Vol{ 0.0 }, mp{ 0.0 }, xp{}, vp{}, Pp{}, bp{}, 
+    ep{ 0.0, 0.0, 0.0 }, ssp{ 0.0, 0.0, 0.0 }, 
+    N1{ 0.0 }, N2{ 0.0 }, N3{ 0.0 }, N4{ 0.0 },
+    dN1{}, dN2{}, dN3{}, dN4{}
+{
     // Initialization list is used to set initial values for member variables
-    // std::cout << "Particle()" << std::endl;
 }
 
 // Destructor to clean up resources
 Particle::~Particle() {}
 
-void Particle::mass(const Material& material) {
+void Particle::calculateMass(const Material& material) {
     mp = material.rho * Vol;
 }
 
-void Particle::momentum() {
+void Particle::calculateMomentum() {
     Pp = mp * vp;
+}
+
+void Particle::calculateSpecificStress(const Material& material) {
+
+    double sp[3]{};
+    sp[0] = material.E1 * ep[0] + material.E2 * ep[1];
+    sp[1] = material.E2 * ep[0] + material.E1 * ep[1];
+    sp[2] = material.G * ep[2];
+
+    ssp[0] = sp[0] / material.rho;
+    ssp[1] = sp[1] / material.rho;
+    ssp[2] = sp[2] / material.rho;
+
 }
 
 void Particle::show() const {
@@ -34,25 +42,21 @@ void Particle::show() const {
     std::cout << "position : " << xp << std::endl;
     std::cout << "velocity : " << vp << std::endl;
     std::cout << "momentum : " << Pp << std::endl;
-    std::cout << "stress : " << sp[0] << ", " << sp[1] << ", " << sp[2] << std::endl;
+    std::cout << "specific stress : " << ssp[0] << ", " << ssp[1] << ", " << ssp[2] << std::endl;
 }
 
 // ****************************    NODE    ***************************************
 // Constructor to initialize member variables
 Node::Node() :
-    nid{ 0 },
-    mn{ 0.0 },
-    xn{},
-    vn{},
-    pn{},
-    fint{},
-    fext{},
-    bn{} {
+    nid{ 0 }, mn{ 0.0 }, xn{}, vn{}, pn{}, 
+    fint{}, fext{}, bn{}, normal{}
+{
     // Initialization list is used to set initial values for member variables
 }
 
 // Destructor to clean up resources
-Node::~Node() {
+Node::~Node()
+{
     // No dynamic memory to clean up for now
 }
 
@@ -62,6 +66,7 @@ Element::Element() :n1{ nullptr }, n2{ nullptr }, n3{ nullptr }, n4{ nullptr } {
 Element::~Element() {}
 
 bool Element::contains(const Particle& particle) const {
+
     // Use a simple bounding box check for demonstration purposes
     double minX = std::min({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
     double maxX = std::max({ n1->xn[0], n2->xn[0], n3->xn[0], n4->xn[0] });
@@ -74,7 +79,7 @@ bool Element::contains(const Particle& particle) const {
 
 // ****************************    MESH    ***************************************
 Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material)
-    : mat{ &material }
+    : material{ &material }
 {
     initParticleInfo(particleFile, material);
     initNodeInfo(nodeFile);
@@ -82,14 +87,17 @@ Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const M
     createElementParticleMap();
 }
 
-Mesh::~Mesh() {
+Mesh::~Mesh() 
+{
     // std::cout << "The mesh has been deleted\n";
 }
 
 void Mesh::initParticleInfo(const std::string& filePath, const Material& material) {
+
     std::ifstream file(filePath);
     std::string line;
     while (std::getline(file, line)) {
+
         // Skip lines that start with #
         if (line.empty() || line[0] == '#')
             continue;
@@ -103,9 +111,7 @@ void Mesh::initParticleInfo(const std::string& filePath, const Material& materia
             >> ip.ep[0] >> ip.ep[1] >> ip.ep[2]
             >> ip.bp[0] >> ip.bp[1];
 
-        // calculate particle mass and momentum
-        ip.mass(material);
-        ip.momentum();
+        ip.calculateSpecificStress(material);
 
         if (ip.Vol != 0.0)
             particles.push_back(ip);
@@ -115,7 +121,9 @@ void Mesh::initParticleInfo(const std::string& filePath, const Material& materia
 }
 
 void Mesh::createElements() {
-    int nodesPerSide = static_cast<int>(sqrt(nodes.size())) - 1; // 假設網格是正方形
+
+    // Assume the grid is square
+    int nodesPerSide = static_cast<int>(sqrt(nodes.size())) - 1;
     for (int i = 0; i < nodesPerSide; ++i) {
         for (int j = 0; j < nodesPerSide; ++j) {
             int n1_id = i * (nodesPerSide + 1) + j;
@@ -134,8 +142,11 @@ void Mesh::createElements() {
 }
 
 void Mesh::createElementParticleMap() {
+
     for (int i = 0; i < particles.size(); ++i) {
+
         for (int j = 0; j < elements.size(); ++j) {
+
             if (elements[j].contains(particles[i])) {
                 pem[i] = j;
                 break;
@@ -145,9 +156,11 @@ void Mesh::createElementParticleMap() {
 }
 
 //Element* Mesh::findElementForParticle(const Particle& particle) {
+// 
 //    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
 //        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
 //    });
+// 
 //    if (it != particles.end()) {
 //        int particleIndex = std::distance(particles.begin(), it);
 //        if (pem.find(particleIndex) != pem.end()) {
@@ -158,11 +171,13 @@ void Mesh::createElementParticleMap() {
 //}
 
 void Mesh::initNodeInfo(const std::string& filename) {
+
     std::ifstream infile(filename);
     if (!infile) {
         std::cerr << "Cannot open file: " << filename << std::endl;
         return;
     }
+
     std::string line;
     int nodeCount;
     // Read the total number of nodes
@@ -170,6 +185,7 @@ void Mesh::initNodeInfo(const std::string& filename) {
         std::cerr << "Error reading the number of nodes from file: " << filename << std::endl;
         return;
     }
+
     // Skip the next few lines
     for (int i = 0; i < 4; ++i) {
         if (!std::getline(infile, line)) {
@@ -177,6 +193,7 @@ void Mesh::initNodeInfo(const std::string& filename) {
             return;
         }
     }
+
     // Read node data
     int id = 0;
     while (std::getline(infile, line)) {
@@ -191,6 +208,7 @@ void Mesh::initNodeInfo(const std::string& filename) {
 }
 
 void Mesh::showParticleInitInfo() const {
+
     for (const Particle& p : particles) {
         std::cout << "Particle ID: " << p.pid << "\n"
             << "Volume: " << p.Vol << "\n"
@@ -204,12 +222,14 @@ void Mesh::showParticleInitInfo() const {
 }
 
 void Mesh::showNodeInitInfo() const {
+
     for (const Node& node : nodes) {
         std::cout << "Node ID: " << node.nid << ", Position: (" << node.xn[0] << ", " << node.xn[1] << ")\n";
     }
 }
 
 void Mesh::showElementInfo() const {
+
     int eid = 0;
     for (const Element& elem : elements) {
         std::cout << "Element " << eid++

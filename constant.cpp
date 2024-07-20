@@ -5,6 +5,10 @@ Material::Material(double rho, double K, double G) :
 {
     E = 9.0 * K * G / (3.0 * K + G);
     v = 0.5 * (3.0 * K - 2.0 * G) / (3.0 * K + G); // poisson
+
+    // plane stress
+    E1 = E / (1.0 - v * v);
+    E2 = v * E / (1.0 - v * v);
 }
 
 Material::~Material() {}

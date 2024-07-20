@@ -11,6 +11,7 @@ public:
 	inline void setSimulationTime(double et) { endTime = et; }
 
 	// solution process
+	void calculateParticleInfo();
 	void particleToNode();
 	void nodalSolution();
 	void nodeToParticle();
