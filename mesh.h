@@ -10,8 +10,10 @@
 #include "algebra.h"
 #include "constant.h"
 
-const double dxi{ 2.0 / UNITGRID };
-const double deta{ 2.0 / UNITGRID };
+static const double dxi{ 2.0 / UNITGRID };
+static const double deta{ 2.0 / UNITGRID };
+static const double N_min{ 1e-3 };
+static const double L_cut{ 1e-2 };
 
 class Material {
 public:
@@ -133,40 +135,20 @@ private:
 	void createElements();
 };
 
+
 // shape function (QUAD4)
-inline double shapeN1(const double xi, const double eta) {
-	return 0.5 * (1.0 - xi) * 0.5 * (1.0 - eta);
-}
-inline double shapeN2(const double xi, const double eta) {
-	return 0.5 * (1.0 + xi) * 0.5 * (1.0 - eta);
-}
-inline double shapeN3(const double xi, const double eta) {
-	return 0.5 * (1.0 + xi) * 0.5 * (1.0 + eta);
-}
-inline double shapeN4(const double xi, const double eta) {
-	return 0.5 * (1.0 - xi) * 0.5 * (1.0 + eta);
-}
-inline double shapedN1x(const double eta) {
-	return (0.5 * (-1.0) * dxi) * 0.5 * (1.0 - eta);
-}
-inline double shapedN1y(const double xi) {
-	return (0.5 * (-1.0) * deta) * (0.5 * (1.0 - xi));
-}
-inline double shapedN2x(const double eta) {
-	return (0.5 * (1.0) * dxi) * (0.5 * (1.0 - eta));
-}
-inline double shapedN2y(const double xi) {
-	return (0.5 * (-1.0) * deta) * (0.5 * (1.0 + xi));
-}
-inline double shapedN3x(const double eta) {
-	return (0.5 * (1.0) * dxi) * (0.5 * (1.0 + eta));
-}
-inline double shapedN3y(const double xi) {
-	return (0.5 * (1.0) * deta) * (0.5 * (1.0 + xi));
-}
-inline double shapedN4x(const double eta) {
-	return (0.5 * (-1.0) * dxi) * (0.5 * (1.0 + eta));
-}
-inline double shapedN4y(const double xi) {
-	return (0.5 * (1.0) * deta) * (0.5 * (1.0 - xi));
-}
+static double stable(double fij);
+static double  stabledN(double dfij, double fij);
+
+double shapeN1(const double xi, const double eta);
+double shapeN2(const double xi, const double eta);
+double shapeN3(const double xi, const double eta);
+double shapeN4(const double xi, const double eta);
+double shapedN1x(const double eta);
+double shapedN1y(const double xi);
+double shapedN2x(const double eta);
+double shapedN2y(const double xi);
+double shapedN3x(const double eta);
+double shapedN3y(const double xi);
+double shapedN4x(const double eta);
+double shapedN4y(const double xi);

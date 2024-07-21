@@ -37,7 +37,7 @@ int main() {
         sol.algorithm(t, bcArray, decayFunction);
 
         // output
-        // sol.data_output("particle_output.txt", "node_output.txt", true);
+        sol.data_output("particle_output.txt", "node_output.txt", true);
 
         // reset nodal value
         sol.resetNode();
@@ -58,10 +58,10 @@ std::vector<Boundary> bcSet()
 {
     std::vector<Boundary> bcArray;
 
-    Boundary bc1{ "sticky", Vector2D(-1.5, -1.5), Vector2D(1.5, -1.5) };
-    Boundary bc2{ "sticky", Vector2D(1.5, -1.5), Vector2D(1.5, 1.5) };
-    Boundary bc3{ "sticky", Vector2D(1.5, 1.5), Vector2D(-1.5, 1.5) };
-    Boundary bc4{ "sticky", Vector2D(-1.5, 1.5), Vector2D(-1.5, -1.5) };
+    Boundary bc1{ "slip", Vector2D(-1.5, -1.5), Vector2D(1.5,  -1.5) };
+    Boundary bc2{ "slip", Vector2D(1.5,  -1.5), Vector2D(1.5,   1.5) };
+    Boundary bc3{ "slip", Vector2D(1.5,   1.5), Vector2D(-1.5,  1.5) };
+    Boundary bc4{ "slip", Vector2D(-1.5,  1.5), Vector2D(-1.5, -1.5) };
 
     bc1.setNbc(Vector2D(0.0, 1.0));
     bc2.setNbc(Vector2D(-1.0, 0.0));

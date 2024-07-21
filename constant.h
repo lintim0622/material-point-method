@@ -23,7 +23,7 @@ static const double K = 0.003E+9;
 static const double G = 0.0006E+9;
 
 static const std::string PARTICLEFILE{ "PARTICLE INFO A.txt" };
-static const std::string NODEFILE{ "NODAL POSITION.txt.txt" };
+static const std::string NODEFILE{ "NODAL POSITION.txt" };
 
 
 

@@ -288,3 +288,61 @@ void Mesh::showElementInfo() const
                   << elem.n4->nid << " (" << elem.n4->xn[0] << ", " << elem.n4->xn[1] << ")\n";
     }
 }
+
+static double stable(double fij)
+{
+    if (fij < N_min)
+        return N_min;
+    else if (fij > (1.0 - N_min))
+        return 1.0 - N_min;
+    else
+        return fij;
+}
+
+
+static double  stabledN(double dfij, double fij)
+{
+    double Le = 0.5 - std::abs(fij - 0.5);
+    if (Le < L_cut)
+        return fij * dfij * Le / L_cut;
+
+    return fij * dfij;
+}
+
+double shapeN1(const double xi, const double eta) {
+    return stable(0.5 * (1.0 - xi)) * stable(0.5 * (1.0 - eta));
+}
+double shapeN2(const double xi, const double eta) {
+    return stable(0.5 * (1.0 + xi)) * stable(0.5 * (1.0 - eta));
+}
+double shapeN3(const double xi, const double eta) {
+    return stable(0.5 * (1.0 + xi)) * stable(0.5 * (1.0 + eta));
+}
+double shapeN4(const double xi, const double eta) {
+    return stable(0.5 * (1.0 - xi)) * stable(0.5 * (1.0 + eta));
+}
+double shapedN1x(const double eta) {
+    return stabledN((0.5 * (-1.0) * dxi), stable(0.5 * (1.0 - eta)));
+}
+double shapedN1y(const double xi) {
+    return stabledN((0.5 * (-1.0) * deta), stable(0.5 * (1.0 - xi)));
+}
+double shapedN2x(const double eta) {
+    return stabledN((0.5 * (1.0) * dxi), stable(0.5 * (1.0 - eta)));
+}
+double shapedN2y(const double xi) {
+    return stabledN((0.5 * (-1.0) * deta), stable(0.5 * (1.0 + xi)));
+}
+double shapedN3x(const double eta) {
+    return stabledN((0.5 * (1.0) * dxi), stable(0.5 * (1.0 + eta)));
+}
+double shapedN3y(const double xi) {
+    return stabledN((0.5 * (1.0) * deta), stable(0.5 * (1.0 + xi)));
+}
+double shapedN4x(const double eta) {
+    return stabledN((0.5 * (-1.0) * dxi), stable(0.5 * (1.0 + eta)));
+}
+double shapedN4y(const double xi) {
+    return stabledN((0.5 * (1.0) * deta), stable(0.5 * (1.0 - xi)));
+}
+    
