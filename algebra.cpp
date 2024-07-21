@@ -44,10 +44,24 @@ Vector2D Vector2D::operator-(const Vector2D& other) const
     return Vector2D(_x - other._x, _y - other._y);
 }
 
+Vector2D Vector2D::operator-() const 
+{
+    return Vector2D(-_x, -_y);
+}
+
 Vector2D Vector2D::operator*(double scalar) const
 {
     return Vector2D(_x * scalar, _y * scalar);
 }
+
+Vector2D Vector2D::operator/(double scalar) const 
+{
+    if (scalar == 0.0) {
+        throw std::runtime_error("Division by zero");
+    }
+    return Vector2D(_x / scalar, _y / scalar);
+}
+
 
 Vector2D& Vector2D::operator=(const Vector2D& other)
 {
@@ -90,6 +104,17 @@ Vector2D& Vector2D::operator*=(double scalar)
     return *this;
 }
 
+Vector2D& Vector2D::operator/=(double scalar) 
+{
+    if (scalar == 0.0) {
+        throw std::runtime_error("Division by zero");
+    }
+    _x /= scalar;
+    _y /= scalar;
+    return *this;
+}
+
+
 double& Vector2D::operator[](int index)
 {
     if (index == 0)
@@ -110,16 +135,31 @@ const double& Vector2D::operator[](int index) const
         throw std::out_of_range("Index out of range");
 }
 
-// Overload operator* to multiply a scalar with a Vector2D object
-Vector2D operator*(double scalar, const Vector2D& vector)
-{
-    return Vector2D(scalar * vector[0], scalar * vector[1]);
-}
-
 void Vector2D::setZero()
 {
     _x = 0.0;
     _y = 0.0;
+}
+
+// Dot product
+double Vector2D::dot(const Vector2D& other) const 
+{
+    return _x * other._x + _y * other._y;
+}
+
+// Normalized vector
+Vector2D Vector2D::normalized() const 
+{
+    double length = std::sqrt(_x * _x + _y * _y);
+    if (length == 0.0)
+        throw std::runtime_error("Cannot normalize a zero-length vector");
+    return Vector2D(_x / length, _y / length);
+}
+
+// Overload operator* to multiply a scalar with a Vector2D object
+Vector2D operator*(double scalar, const Vector2D& vector)
+{
+    return Vector2D(scalar * vector[0], scalar * vector[1]);
 }
 
 // Overload operator<< to print a Vector2D object

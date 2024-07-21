@@ -21,18 +21,27 @@ public:
     // Operator overloads
     Vector2D operator+(const Vector2D& other) const;
     Vector2D operator-(const Vector2D& other) const;
+    Vector2D operator-() const;
     Vector2D operator*(double scalar) const;
+    Vector2D operator/(double scalar) const;
     Vector2D& operator=(const Vector2D& other);
     Vector2D& operator=(Vector2D&& other) noexcept;
 
     Vector2D& operator+=(const Vector2D& other);
     Vector2D& operator-=(const Vector2D& other);
     Vector2D& operator*=(double scalar);
+    Vector2D& operator/=(double scalar);
     double& operator[](int index);
     const double& operator[](int index) const;
 
     // reset vector
     void setZero();
+
+    // dot product
+    double dot(const Vector2D& other) const;
+
+    // normalized vector
+    Vector2D normalized() const;
 
 private:
     double _x;

@@ -13,6 +13,23 @@
 const double dxi{ 2.0 / UNITGRID };
 const double deta{ 2.0 / UNITGRID };
 
+class Material {
+public:
+	Material(double rho, double K, double G);
+	~Material();
+
+	void verify_time_step(double dt);
+
+	double rho;
+	double K;
+	double G;
+	double E;
+	double v;
+
+	double E1;
+	double E2;
+};
+
 class Particle {
 public:
 	Particle();
@@ -53,6 +70,7 @@ public:
 	Vector2D fint; // internal force
 	Vector2D fext; // external force
 	Vector2D ftot; // external force
+	Vector2D fbc; // boundary force
 	Vector2D bn; // body force
 	Vector2D normal; // normal vector
 };
@@ -99,7 +117,7 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	const Material* material;
+	const Material material;
 
 	// Map particle index to element index
 	std::map<int, int> pem; 

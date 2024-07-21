@@ -1,6 +1,14 @@
 ﻿#include "mesh.h"
 #include "solve.h"
 
+std::vector<Boundary> bcSet();
+
+// define decay function
+std::function<double(double)> decayFunction = [](double x)
+{
+    return (1.0 - x / UNITGRID) * (1.0 - x / UNITGRID);
+};
+
 int main() {
 
     // creat material object
@@ -11,6 +19,9 @@ int main() {
     Mesh msh(PARTICLEFILE, NODEFILE, elastic);
     mesh_list mshs;
     mshs.push_back(std::make_unique<Mesh>(std::move(msh)));
+
+    // creat boundary object
+    std::vector<Boundary> bcArray{ bcSet() };
 
     // creat solver object
     Solve sol{ mshs };
@@ -23,7 +34,13 @@ int main() {
     while (t <= ENDTIME)
     {
         // main process
-        sol.algorithm(t);
+        sol.algorithm(t, bcArray, decayFunction);
+
+        // output
+        // sol.data_output("particle_output.txt", "node_output.txt", true);
+
+        // reset nodal value
+        sol.resetNode();
 
         if (step % print_interval == 0) {
             std::cout << "t = " << t << std::endl;
@@ -35,4 +52,31 @@ int main() {
 
     std::cout << "end" << std::endl;
     return 0;
+}
+
+std::vector<Boundary> bcSet() 
+{
+    std::vector<Boundary> bcArray;
+
+    Boundary bc1{ "sticky", Vector2D(-1.5, -1.5), Vector2D(1.5, -1.5) };
+    Boundary bc2{ "sticky", Vector2D(1.5, -1.5), Vector2D(1.5, 1.5) };
+    Boundary bc3{ "sticky", Vector2D(1.5, 1.5), Vector2D(-1.5, 1.5) };
+    Boundary bc4{ "sticky", Vector2D(-1.5, 1.5), Vector2D(-1.5, -1.5) };
+
+    bc1.setNbc(Vector2D(0.0, 1.0));
+    bc2.setNbc(Vector2D(-1.0, 0.0));
+    bc3.setNbc(Vector2D(0.0, -1.0));
+    bc4.setNbc(Vector2D(1.0, 0.0));
+
+    bc1.setMu(0.0);
+    bc2.setMu(0.0);
+    bc3.setMu(0.0);
+    bc4.setMu(0.0);
+
+    bcArray.push_back(bc1);
+    bcArray.push_back(bc2);
+    bcArray.push_back(bc3);
+    bcArray.push_back(bc4);
+
+    return bcArray;
 }

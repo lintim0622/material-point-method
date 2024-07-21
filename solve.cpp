@@ -1,6 +1,7 @@
 #include <iostream>
 #include "solve.h"
 
+// ****************************    SOLVE    ***************************************
 Solve::Solve(mesh_list& meshs)
 {
 	for (std::unique_ptr<Mesh>& msh : meshs)
@@ -15,7 +16,8 @@ Solve::~Solve()
 
 }
 
-void Solve::algorithm(double nowTime)
+void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
+                      const std::function<double(double)>& decayFunction)
 {
     // for each mesh
     for (std::unique_ptr<Mesh>& msh : _meshs)
@@ -23,8 +25,8 @@ void Solve::algorithm(double nowTime)
         this->calculateParticleInfo(msh);
         this->particleToNode(msh);
         this->nodalSolution(msh);
+        this->frameBoundary(msh, bcArray, decayFunction);
         this->nodeToParticle(msh, nowTime);
-        this->resetNode(msh);
     }
 }
 
@@ -35,7 +37,7 @@ void Solve::calculateParticleInfo(std::unique_ptr<Mesh>& msh)
         // `it` is of type `const std::pair<const int, int>&`
         Particle& ip = msh->particles[it.first];
         Element& ie = msh->elements[it.second];
-        const Material& material = *(msh->material);
+        const Material& material = msh->material;
 
         // Calculate particle mass and momentum
         ip.calculateMass(material);
@@ -129,7 +131,7 @@ void Solve::nodalSolution(std::unique_ptr<Mesh>& msh)
         {
             // normalization -> normal vector
             double nNorm{ std::sqrt(std::pow(node.normal[0], 2) + std::pow(node.normal[1], 2)) };
-            node.normal *= (1.0 / nNorm);
+            node.normal /= nNorm;
 
             // nodal external force
             node.fext = node.bn;
@@ -138,10 +140,10 @@ void Solve::nodalSolution(std::unique_ptr<Mesh>& msh)
             node.ftot = node.fext + node.fint;
 
             // nodal velocity -> vn
-            node.vn = (1.0 / node.mn) * node.pn;
+            node.vn = node.pn / node.mn;
 
             // nodal acceleration
-            node.an = (1.0 / node.mn) * node.ftot;
+            node.an = node.ftot / node.mn;
 
             // update nodal velocity -> vn+1
             node.vn += DT * node.an;
@@ -190,19 +192,103 @@ void Solve::nodeToParticle(std::unique_ptr<Mesh>& msh, double nowTime)
         ip.ineps[1] = depy;
         ip.ineps[2] = dexyp;
 
-        if (ip.xp[0] > MAXBC || ip.xp[0] < MINBC) {
+        if (ip.xp[0] > MAXBC || ip.xp[0] < MINBC) 
+        {
             std::cout << "t = " << nowTime << std::endl;
             std::cout << "particle " << ip.pid << std::endl;
-            std::cout << "xp = [" << std::fixed << std::setprecision(3) 
+            std::cout << "xp = [" << std::fixed << std::setprecision(6) 
                       << ip.xp[0] << ", " << ip.xp[1] << "]" << std::endl;
             throw Interpolate_Error("out of boundary for x direction!!!");
         }
-        if (ip.xp[1] > MAXBC || ip.xp[1] < MINBC) {
+
+        if (ip.xp[1] > MAXBC || ip.xp[1] < MINBC) 
+        {
             std::cout << "t = " << nowTime << std::endl;
             std::cout << "particle " << ip.pid << std::endl;
-            std::cout << "xp = [" << std::fixed << std::setprecision(3) 
+            std::cout << "xp = [" << std::fixed << std::setprecision(6) 
                       << ip.xp[0] << ", " << ip.xp[1] << "]" << std::endl;
             throw Interpolate_Error("out of boundary for y direction!!!");
+        }
+    }
+}
+
+static double norm(const Vector2D& vector)
+{
+    return std::sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
+}
+
+void Solve::frameBoundary(std::unique_ptr<Mesh>& msh, 
+                          std::vector<Boundary>& bcArray, 
+                          const std::function<double(double)>& decayFunction)
+{
+    for (Node& node : msh->nodes)
+    {
+        if (node.mn > 0.0)
+        {
+            double& m_ik{ node.mn };
+            Vector2D& x_ik{ node.xn };
+            Vector2D& vtr_iL{ node.vn };
+            Vector2D ptr_iL{ vtr_iL * m_ik };
+
+            for (Boundary& bc : bcArray)
+            {
+                // projection of a point in global coordinate
+                Vector2D x_ikl{ bc.transformGlobal(x_ik) };
+
+                // projection of a point in local coordinate
+                Vector2D x_bc{ bc.transformLocal(bc.newtonMethod(x_ikl)) };
+                
+                // the distance parallel to the normal vector
+                double r{ (x_ik - x_bc).dot(bc.nbc()) };
+
+                /* the length of the grid size in the normal direction -> UNITGRID
+                   nodal momentum in the normal direction => scale */
+                double ptr_iLn{ ptr_iL.dot(bc.nbc()) };
+
+                // influence coefficient->q
+                double q{ layer(r, decayFunction) };
+
+                if (bc.form() == "slip")
+                {
+                    if (ptr_iLn < 0.0 && r < UNITGRID)
+                    {
+                        // normal force -> (-node.f_int - node.f_ext + node.mass * (-v_ik) / dt).dot(bc.nbc)
+                        double fN{ -ptr_iL.dot(bc.nbc()) / DT };
+                        Vector2D f_in{ fN * bc.nbc() };
+
+                        // friction force
+                        Vector2D f_iLt{ -(ptr_iL - ptr_iLn * bc.nbc()) / DT };
+                        Vector2D f_if{};
+                        double norm_f_iLt{ norm(f_iLt) };
+                        if (norm_f_iLt != 0.0)
+                        {
+                            Vector2D et{ f_iLt / norm_f_iLt };
+                            f_if = std::min(bc.mu() * fN, norm_f_iLt) * et;
+                        }
+
+                        // boundary force
+                        Vector2D f_ibc{ q * (f_in + f_if) };
+                        Vector2D a_ibc{ f_ibc / m_ik };
+
+                        // update MPM node acceleration && velocity
+                        node.fbc += f_ibc;
+                        node.an += a_ibc;
+                        node.vn += DT * a_ibc;
+                    }
+                }
+                
+                else if (bc.form() == "sticky")
+                {
+                    // boundary force -> q*(-node.f_int - node.f_ext + node.mass*(-v_ik)/dt)
+                    Vector2D f_ibc{ q * (-ptr_iL / DT) };
+                    Vector2D a_ibc{ f_ibc / m_ik };
+
+                    // update MPM node acceleration && velocity
+                    node.fbc += f_ibc;
+                    node.an += a_ibc;
+                    node.vn += DT * a_ibc;
+                }
+            }
         }
     }
 }
@@ -212,7 +298,7 @@ void Solve::updateParticles(std::unique_ptr<Mesh>& msh)
     for (const std::pair<const int, int>& it : msh->pem) 
     {
         Particle& ip = msh->particles[it.first];
-        const Material& material = *(msh->material);
+        const Material& material = msh->material;
 
         double insp[3] {
             material.E1 * ip.ineps[0] + material.E2 * ip.ineps[1], 
@@ -232,21 +318,273 @@ void Solve::updateParticles(std::unique_ptr<Mesh>& msh)
     msh->createElementParticleMap();
 }
 
-void Solve::resetNode(std::unique_ptr<Mesh>& msh)
+void Solve::resetNode()
 {
-    for (Node& node : msh->nodes)
+    for (std::unique_ptr<Mesh>& msh : _meshs)
     {
-        if (node.mn > 0.0)
+        for (Node& node : msh->nodes)
         {
-            node.mn = 0.0;
-            node.vn.setZero();
-            node.an.setZero();
-            node.pn.setZero();
-            node.fint.setZero();
-            node.fext.setZero();
-            node.ftot.setZero();
-            node.bn.setZero();
-            node.normal.setZero();
+            if (node.mn > 0.0)
+            {
+                node.mn = 0.0;
+                node.vn.setZero();
+                node.an.setZero();
+                node.pn.setZero();
+                node.fint.setZero();
+                node.fext.setZero();
+                node.ftot.setZero();
+                node.fbc.setZero();
+                node.bn.setZero();
+                node.normal.setZero();
+            }
+        } 
+    }
+}
+
+void Solve::data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const {
+    std::ios_base::openmode mode = std::ios_base::out;
+    if (append) {
+        mode |= std::ios_base::app;
+    }
+
+    // Particle data output
+    std::ofstream pfile(pfile_name, mode);
+    if (!pfile.is_open()) {
+        std::cerr << "Failed to open particle file: " << pfile_name << std::endl;
+        return;
+    }
+
+    if (!append) {
+        // Assuming particle_info_name contains the headers for the particle file
+        pfile << std::setw(8) << "PID"
+            << std::setw(14) << "Mass"
+            << std::setw(14) << "PosX"
+            << std::setw(14) << "PosY"
+            << std::setw(14) << "VelX"
+            << std::setw(14) << "VelY"
+            << std::setw(14) << "StressXX"
+            << std::setw(14) << "StressYY"
+            << std::setw(14) << "StressXY"
+            << std::setw(14) << "StrainXX"
+            << std::setw(14) << "StrainYY"
+            << std::setw(14) << "StrainXY" << std::endl;
+    }
+
+    for (const std::unique_ptr<Mesh>& msh : _meshs) {
+        for (const Particle& particle : msh->particles) {
+            pfile << std::setw(8) << particle.pid
+                << std::setw(14) << std::scientific << particle.mp
+                << std::setw(14) << particle.xp[0]
+                << std::setw(14) << particle.xp[1]
+                << std::setw(14) << particle.vp[0]
+                << std::setw(14) << particle.vp[1]
+                << std::setw(14) << particle.ssp[0]
+                << std::setw(14) << particle.ssp[1]
+                << std::setw(14) << particle.ssp[2]
+                << std::setw(14) << particle.ep[0]
+                << std::setw(14) << particle.ep[1]
+                << std::setw(14) << particle.ep[2] << std::endl;
         }
-    } 
+    }
+    pfile.close();
+    // std::cout << pfile_name << " has been output" << std::endl;
+
+    // Node data output
+    std::ofstream nfile(nfile_name, mode);
+    if (!nfile.is_open()) {
+        std::cerr << "Failed to open node file: " << nfile_name << std::endl;
+        return;
+    }
+
+    if (!append) {
+        // Assuming node_info_name contains the headers for the node file
+        nfile << std::setw(8) << "NID"
+            << std::setw(14) << "Mass"
+            << std::setw(14) << "PosX"
+            << std::setw(14) << "PosY"
+            << std::setw(14) << "VelX"
+            << std::setw(14) << "VelY"
+            << std::setw(14) << "AccX"
+            << std::setw(14) << "AccY"
+            << std::setw(14) << "FIntX"
+            << std::setw(14) << "FIntY"
+            << std::setw(14) << "FExtX"
+            << std::setw(14) << "FExtY" << std::endl;
+    }
+
+    for (const std::unique_ptr<Mesh>& msh : _meshs) {
+        for (const Node& node : msh->nodes) {
+            if (node.mn > 0.0) {
+                nfile << std::setw(8) << node.nid
+                    << std::setw(14) << std::scientific << node.mn
+                    << std::setw(14) << node.xn[0]
+                    << std::setw(14) << node.xn[1]
+                    << std::setw(14) << node.vn[0]
+                    << std::setw(14) << node.vn[1]
+                    << std::setw(14) << node.an[0]
+                    << std::setw(14) << node.an[1]
+                    << std::setw(14) << node.fint[0]
+                    << std::setw(14) << node.fint[1]
+                    << std::setw(14) << node.fext[0]
+                    << std::setw(14) << node.fext[1] << std::endl;
+            }
+        }
+    }
+    nfile.close();
+    // std::cout << nfile_name << " has been output" << std::endl;
+}
+
+// ****************************    BOUNDARY    ***************************************
+// Constructor
+Boundary::Boundary(const std::string& form, const Vector2D& p1, const Vector2D& p2)
+    : _form{ form }, _mu{ 0.0 }, _p1{ p1 }, _p2{ p2 }, _nbc{} 
+{
+    Vector2D diff = _p2 - _p1;
+
+    // Assume _basey is the vertical vector of _basex
+    _exl = diff.normalized();
+    _eyl = Vector2D(-_exl[1], _exl[0]);
+    //std::cout << _basex << ", " << _basey << std::endl;
+
+    // calculate transform matrix (global -> local)
+    double exlx = _exl.dot(ex);
+    double exly = _exl.dot(ey);
+    double eylx = _eyl.dot(ex);
+    double eyly = _exl.dot(ey);
+
+    Vector2D exlxy{ exlx, exly };
+    Vector2D eylxy{ eylx, eyly };
+    _Txlx.push_back(exlxy);
+    _Txlx.push_back(eylxy);
+
+    // calculate transform matrix (local -> global)
+    Vector2D exylx{ exlx, eylx };
+    Vector2D exyly{ exly, eyly };
+    _Txxl.push_back(exylx);
+    _Txxl.push_back(exyly);
+}
+
+// Destructor
+Boundary::~Boundary() {}
+
+// Setters
+void Boundary::setForm(const std::string& form)
+{
+    _form = form;
+}
+
+void Boundary::setMu(double mu)
+{
+    _mu = mu;
+}
+
+void Boundary::setP1(const Vector2D& p1)
+{
+    _p1 = p1;
+}
+
+void Boundary::setP2(const Vector2D& p2)
+{
+    _p2 = p2;
+}
+
+void Boundary::setNbc(const Vector2D& nbc)
+{
+    _nbc = nbc;
+}
+
+// Getters (return by reference)
+const std::string& Boundary::form() const
+{
+    return _form;
+}
+
+double Boundary::mu() const
+{
+    return _mu;
+}
+
+const Vector2D& Boundary::p1() const
+{
+    return _p1;
+}
+
+const Vector2D& Boundary::p2() const
+{
+    return _p2;
+}
+
+const Vector2D& Boundary::nbc() const
+{
+    return _nbc;
+}
+
+Vector2D Boundary::transformGlobal(const Vector2D& localPosition)
+{
+    Vector2D diff = localPosition - _p1;
+    return Vector2D{ diff.dot(_Txxl[0]), diff.dot(_Txxl[1]) };
+}
+
+Vector2D Boundary::transformLocal(const Vector2D& globalPosition)
+{
+    Vector2D temp{ globalPosition.dot(_Txlx[0]), globalPosition.dot(_Txlx[1]) };
+    return temp + _p1;
+}
+
+Vector2D Boundary::newtonMethod(const Vector2D& globalPosition)
+{
+    double xo = globalPosition[0];
+    double yo = globalPosition[1];
+    double x = xo;
+    double y = 0.0;
+    Vector2D Tt{ 1.0, 0.0 };
+
+    int num{};
+    while (true)
+    {
+        double A{};
+        double dA{};
+        double B{};
+        double dB{};
+        double N{};
+        Vector2D n{};
+        if (yo - y == 0.0)
+        {
+            n = _nbc;
+            if (x < xo)
+                n *= (-1.0);
+        } 
+
+        else
+        {
+            n = Vector2D(xo - x, yo - y) / std::sqrt((xo - x) * (xo - x) + (yo - y) * (yo - y));
+            A = 1.0 / std::sqrt((xo - x) * (xo - x) + (yo - y) * (yo - y));
+            dA = -0.5 * std::pow((xo - x) * (xo - x) + (yo - y) * (yo - y), -1.5) * (-2.0 * (xo - x) - 2.0 * (yo - y) * 0.0);
+            B = Tt[0] * (xo - x) + Tt[1] * (yo - y);
+            dB = -Tt[0] + 0.0 * (yo - y) + Tt[1] * 0.0;
+        }
+
+        N = Tt.dot(n);
+        if (std::abs(N) <= TOL || num > 100)
+            return Vector2D(x, y);
+
+        double dN = dA * B + A * dB;
+        if (dN != 0.0)
+            x -= N / dN;
+        y = 0.0;
+        num++;
+    }
+}
+
+// define layer function
+static double layer(double r, const std::function<double(double)>& decayFunction)
+{
+    if (r >= UNITGRID)
+        return 0.0;
+
+    else if (0.0 < r && r < UNITGRID)
+        return decayFunction(r);
+
+    else
+        return 1.0;
 }

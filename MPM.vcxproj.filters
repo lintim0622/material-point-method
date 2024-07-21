@@ -27,9 +27,6 @@
     <ClCompile Include="mesh.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
-    <ClCompile Include="constant.cpp">
-      <Filter>來源檔案</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="solve.h">
