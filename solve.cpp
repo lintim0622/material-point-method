@@ -110,10 +110,10 @@ void Solve::particleToNode(std::unique_ptr<Mesh>& msh)
             ip.dN4[0] * ip.ssp[0] + ip.dN4[1] * ip.ssp[2],
             ip.dN4[0] * ip.ssp[2] + ip.dN4[1] * ip.ssp[1]
         };
-        ie.n1->fint += ip.mp * sInternalForce1;
-        ie.n2->fint += ip.mp * sInternalForce2;
-        ie.n3->fint += ip.mp * sInternalForce3;
-        ie.n4->fint += ip.mp * sInternalForce4;
+        ie.n1->fint += (-1.0) * ip.mp * sInternalForce1;
+        ie.n2->fint += (-1.0) * ip.mp * sInternalForce2;
+        ie.n3->fint += (-1.0) * ip.mp * sInternalForce3;
+        ie.n4->fint += (-1.0) * ip.mp * sInternalForce4;
 
         // nodal normal vector
         ie.n1->normal += ip.mp * ip.dN1;
@@ -184,13 +184,13 @@ void Solve::nodeToParticle(std::unique_ptr<Mesh>& msh, double nowTime)
 
         double depx{ DT * (v1[0] * dN1[0] + v2[0] * dN2[0] + v3[0] * dN3[0] + v4[0] * dN4[0]) };
         double depy{ DT * (v1[1] * dN1[1] + v2[1] * dN2[1] + v3[1] * dN3[1] + v4[1] * dN4[1]) };
-        double dexyp = DT * 0.5 * (
+        double depxy = DT * 0.5 * (
             (v1[0] * dN1[1] + v2[0] * dN2[1] + v3[0] * dN3[1] + v4[0] * dN4[1]) +
             (v1[1] * dN1[0] + v2[1] * dN2[0] + v3[1] * dN3[0] + v4[1] * dN4[0])
             );
         ip.ineps[0] = depx;
         ip.ineps[1] = depy;
-        ip.ineps[2] = dexyp;
+        ip.ineps[2] = depxy;
 
         if (ip.xp[0] > MAXBC || ip.xp[0] < MINBC) 
         {

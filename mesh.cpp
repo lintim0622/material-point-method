@@ -293,8 +293,10 @@ static double stable(double fij)
 {
     if (fij < N_min)
         return N_min;
+
     else if (fij > (1.0 - N_min))
         return 1.0 - N_min;
+
     else
         return fij;
 }
