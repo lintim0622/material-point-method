@@ -409,7 +409,9 @@ void Solve::data_output(const std::string& pfile_name, const std::string& nfile_
             << std::setw(14) << "FIntX"
             << std::setw(14) << "FIntY"
             << std::setw(14) << "FExtX"
-            << std::setw(14) << "FExtY" << std::endl;
+            << std::setw(14) << "FExtY" 
+            << std::setw(14) << "FBCX"
+            << std::setw(14) << "FBCY" << std::endl;
     }
 
     for (const std::unique_ptr<Mesh>& msh : _meshs) {
@@ -426,7 +428,9 @@ void Solve::data_output(const std::string& pfile_name, const std::string& nfile_
                     << std::setw(14) << node.fint[0]
                     << std::setw(14) << node.fint[1]
                     << std::setw(14) << node.fext[0]
-                    << std::setw(14) << node.fext[1] << std::endl;
+                    << std::setw(14) << node.fext[1]
+                    << std::setw(14) << node.fbc[0]
+                    << std::setw(14) << node.fbc[1] << std::endl;
             }
         }
     }

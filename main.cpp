@@ -58,7 +58,7 @@ std::vector<Boundary> bcSet()
 {
     std::vector<Boundary> bcArray;
 
-    Boundary bc1{ "sticky", Vector2D(-1.5, -1.5), Vector2D(1.5,  -1.5) };
+    Boundary bc1{ "slip", Vector2D(-1.5, -1.5), Vector2D(1.5,  -1.5) };
     Boundary bc2{ "slip", Vector2D(1.5,  -1.5), Vector2D(1.5,   1.5) };
     Boundary bc3{ "slip", Vector2D(1.5,   1.5), Vector2D(-1.5,  1.5) };
     Boundary bc4{ "slip", Vector2D(-1.5,  1.5), Vector2D(-1.5, -1.5) };
