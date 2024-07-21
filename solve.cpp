@@ -253,7 +253,7 @@ void Solve::frameBoundary(std::unique_ptr<Mesh>& msh,
                     if (ptr_iLn < 0.0 && r < UNITGRID)
                     {
                         // normal force -> (-node.f_int - node.f_ext + node.mass * (-v_ik) / dt).dot(bc.nbc)
-                        double fN{ -ptr_iL.dot(bc.nbc()) / DT };
+                        double fN{ (-ptr_iL / DT).dot(bc.nbc()) };
                         Vector2D f_in{ fN * bc.nbc() };
 
                         // friction force
