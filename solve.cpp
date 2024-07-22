@@ -27,6 +27,7 @@ void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
         this->nodalSolution(msh);
         this->frameBoundary(msh, bcArray, decayFunction);
         this->nodeToParticle(msh, nowTime);
+        this->updateParticles(msh);
     }
 }
 

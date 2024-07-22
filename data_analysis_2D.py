@@ -109,6 +109,6 @@ for i in range(int(N/ptc_nums[0])):
     if (i % 100 == 0):
         plot_fig(i, k=0)
         
-    if (i == (int(N/ptc_nums[0])-1)):
+    if (i == (int(N/ptc_nums[0]))):
         for k in range(5):
             plot_fig(i, k)
