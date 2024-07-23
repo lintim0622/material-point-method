@@ -1,4 +1,6 @@
-﻿#include "mesh.h"
+﻿#include <chrono>
+
+#include "mesh.h"
 #include "solve.h"
 
 std::vector<Boundary> bcSet();
@@ -10,6 +12,9 @@ std::function<double(double)> decayFunction = [](double x)
 };
 
 int main() {
+
+    // Get the start time
+    auto start = std::chrono::high_resolution_clock::now();
 
     // creat material object
     Material elastic{ RHO, K, G };
@@ -49,6 +54,16 @@ int main() {
         t += DT;
         step++;
     }
+
+    // Get the end time
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // Calculate the execution time (in seconds)
+    std::chrono::duration<double> duration = end - start;
+
+    // Output the execution time
+    std::cout << "Finished!\n";
+    std::cout << "Execution time: " << duration.count() << " seconds\n";
 
     std::cout << "end" << std::endl;
     return 0;
