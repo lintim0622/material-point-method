@@ -13,7 +13,7 @@ from sys import exit
 FilePath0 = r"particle_output_mesh0.txt"
 FilePath1 = r"particle_output_mesh1.txt"
 
-ptc_nums = [16]
+ptc_nums = [16, 16]
 node_num = 169
 
 StartTime = 0.0
@@ -26,24 +26,24 @@ xpA = [0]*N
 with open(FilePath0, 'r') as file:
     i, r = 0, 0
     for text in file:
-        if (r != 0):
+        # if (r != 0):
             xpA[i] = text.split()
             xpA[i][0] = float(xpA[i][2])
             xpA[i][1] = float(xpA[i][3])
             xpA[i] = np.array([xpA[i][0] ,xpA[i][1]])
             i += 1
-        r += 1
+        # r += 1
 xpB = [0]*N
 with open(FilePath1, 'r') as file:
     i, r = 0, 0
     for text in file:
-        if (r != 0):
+        # if (r != 0):
             xpB[i] = text.split()
             xpB[i][0] = float(xpB[i][2])
             xpB[i][1] = float(xpB[i][3])
             xpB[i] = np.array([xpB[i][0] ,xpB[i][1]])
             i += 1
-        r += 1
+        # r += 1
 
 xn = [0]*node_num    
 with open(r"nodal_position.txt", 'r') as file:

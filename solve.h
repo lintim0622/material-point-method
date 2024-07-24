@@ -25,7 +25,7 @@ public:
 					   const std::function<double(double)>& decayFunction);
 
 	// contact algorithm
-	void contact(mesh_list::iterator itmsh);
+	void contact();
 
 	// output solution information
 	void data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const;

@@ -27,11 +27,10 @@ void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
         this->nodalSolution(*itmsh);
         this->frameBoundary(*itmsh, bcArray, decayFunction);
     }
-    // contact
-    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
-    {
-        this->contact(itmsh);
-    }
+
+    // contact ALGORITHM
+    this->contact();
+
     // G2P
     for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
     {
@@ -312,86 +311,89 @@ void modify_normal(Node& node, Node& other_node, Vector2D& nB)
 {
     Vector2D d_ri = node.xcn - other_node.xcn;
     if (nB.dot(d_ri) < 0.0)
-        nB * (-1.0);
+        nB *= (-1.0);
 }
     
 
 /*   contact algorithm   */
-void Solve::contact(mesh_list::iterator itmsh)
+void Solve::contact()
 {
-    for (mesh_list::iterator otmsh = std::next(itmsh); otmsh != _meshs.end(); ++otmsh)
+    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh) 
     {
-        for (Node& node : (*itmsh)->nodes)
+        for (mesh_list::iterator otmsh = std::next(itmsh); otmsh != _meshs.end(); ++otmsh)
         {
-            if (node.mn > 0.0)
+            for (Node& node : (*itmsh)->nodes)
             {
-                Vector2D n_rA{ node.normal };
-                double& m_ik{ node.mn };
-                Vector2D& vtr_iL{ node.vn };
+                if (node.mn > 0.0)
+                {
+                    Vector2D& n_rA{ node.normal };
+                    double& m_ik{ node.mn };
+                    Vector2D& vtr_iL{ node.vn };
 
-                for (Node& othernode : (*otmsh)->nodes)
-                {  
-                    if (othernode.mn > 0.0)
+                    for (Node& othernode : (*otmsh)->nodes)
                     {
-                        Vector2D n_rB{ othernode.normal };
-                        double& other_m_ik{ othernode.mn };
-                        Vector2D& other_vtr_iL{ othernode.vn };
-
-                        if (node.nid == othernode.nid)
+                        if (othernode.mn > 0.0)
                         {
-                            Vector2D n_A{ n_rA };
-                            Vector2D n_B{ n_rB };
-                            if ((*itmsh)->material.E > (*otmsh)->material.E)
-                                n_B = -n_rA;
+                            Vector2D& n_rB{ othernode.normal };
+                            double& other_m_ik{ othernode.mn };
+                            Vector2D& other_vtr_iL{ othernode.vn };
 
-                            else if ((*itmsh)->material.E < (*otmsh)->material.E) {}
-
-                            else
+                            if (node.nid == othernode.nid)
                             {
-                                n_rA /= norm(n_rA);
-                                n_rB /= norm(n_rB);
-                                n_A = n_rA - n_rB;
-                                if (n_rA.dot(n_rB) > 0.0)
-                                    n_A = n_rA + n_rB;
-                                n_B = -n_A;
-                            }
+                                Vector2D n_A{};
+                                Vector2D n_B{ n_rB };
+                                if ((*itmsh)->material.E > (*otmsh)->material.E)
+                                    n_B = -n_rA;
 
-                            modify_normal(node, othernode, n_B);
-                            n_B /= norm(n_rB);
-                            n_A = -n_B;
+                                else if ((*itmsh)->material.E < (*otmsh)->material.E) {}
 
-                            Vector2D& p_ik{ node.pn };
-                            Vector2D& other_p_ik{ othernode.pn };
-                            Vector2D f_itotk{ node.fint + node.fext };
-                            Vector2D other_f_itotk{ othernode.fint + othernode.fext };
+                                else
+                                {
+                                    n_rA /= norm(n_rA);
+                                    n_rB /= norm(n_rB);
+                                    n_A = n_rA - n_rB;
+                                    if (n_rA.dot(n_rB) > 0.0)
+                                        n_A = n_rA + n_rB;
+                                    n_B = -n_A;
+                                }
 
-                            double mck = m_ik + other_m_ik;
-                            Vector2D vck{ (p_ik + other_p_ik) / mck };
-                            Vector2D fck{ f_itotk + other_f_itotk };
-                            Vector2D ack{ fck / mck };
-                            Vector2D vcL{ vck + DT * ack };
+                                modify_normal(node, othernode, n_B);
+                                n_B /= norm(n_rB);
+                                n_A = -n_B;
 
-                            double vcLn{ vcL.dot(n_B) };
-                            double vtr_iLn{ vtr_iL.dot(n_B) };
-                            double other_vtr_iLn{ other_vtr_iL.dot(n_B) };
-                            double vrnL = vtr_iLn - other_vtr_iLn;
-                            if (vrnL < 0.0)
-                            {
-                                // calculate object A -> - f_totn + ((m_ik * vcL - p_ik) / dt).dot(NrB)
-                                Vector2D f_icn{ (m_ik / DT) * (vcLn - vtr_iLn) * n_B };
-                                Vector2D a_icn{ f_icn / m_ik };
+                                Vector2D& p_ik{ node.pn };
+                                Vector2D& other_p_ik{ othernode.pn };
+                                Vector2D f_itotk{ node.fint + node.fext };
+                                Vector2D other_f_itotk{ othernode.fint + othernode.fext };
 
-                                node.fct += f_icn;
-                                node.an += a_icn;
-                                node.vn += DT * a_icn;
+                                double mck = m_ik + other_m_ik;
+                                Vector2D vck{ (p_ik + other_p_ik) / mck };
+                                Vector2D fck{ f_itotk + other_f_itotk };
+                                Vector2D ack{ fck / mck };
+                                Vector2D vcL{ vck + DT * ack };
 
-                                // calculate object B->slip contact
-                                Vector2D other_f_icn{ -f_icn };
-                                Vector2D other_a_ikn{ other_f_icn / other_m_ik };
+                                double vcLn{ vcL.dot(n_B) };
+                                double vtr_iLn{ vtr_iL.dot(n_B) };
+                                double other_vtr_iLn{ other_vtr_iL.dot(n_B) };
+                                double vrnL = vtr_iLn - other_vtr_iLn;
+                                if (vrnL < 0.0)
+                                {
+                                    // calculate object A -> - f_totn + ((m_ik * vcL - p_ik) / dt).dot(NrB)
+                                    Vector2D f_icn{ (m_ik / DT) * (vcLn - vtr_iLn) * n_B };
+                                    Vector2D a_icn{ f_icn / m_ik };
 
-                                othernode.fct += other_f_icn;
-                                othernode.an += other_a_ikn;
-                                othernode.vn += DT * other_a_ikn;
+                                    node.fct += f_icn;
+                                    node.an += a_icn;
+                                    node.vn += DT * a_icn;
+
+                                    // calculate object B->slip contact
+                                    Vector2D other_f_icn{ -f_icn };
+                                    Vector2D other_a_ikn{ other_f_icn / other_m_ik };
+
+                                    othernode.fct += other_f_icn;
+                                    othernode.an += other_a_ikn;
+                                    othernode.vn += DT * other_a_ikn;
+                                }
                             }
                         }
                     }
