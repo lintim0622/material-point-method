@@ -341,12 +341,21 @@ void Solve::contact()
                             if (node.nid == othernode.nid)
                             {
                                 Vector2D n_A{};
-                                Vector2D n_B{ n_rB };
+                                Vector2D n_B{};
                                 if ((*itmsh)->material.E > (*otmsh)->material.E)
+                                {
                                     n_B = -n_rA;
-
-                                else if ((*itmsh)->material.E < (*otmsh)->material.E) {}
-
+                                    modify_normal(node, othernode, n_B);
+                                    n_B /= norm(n_rB);
+                                    n_A = -n_B;
+                                }
+                                else if ((*itmsh)->material.E < (*otmsh)->material.E)
+                                {
+                                    n_B = n_rB;
+                                    modify_normal(node, othernode, n_B);
+                                    n_B /= norm(n_rB);
+                                    n_A = -n_B;
+                                }
                                 else
                                 {
                                     n_rA /= norm(n_rA);
@@ -357,9 +366,9 @@ void Solve::contact()
                                     n_B = -n_A;
                                 }
 
-                                modify_normal(node, othernode, n_B);
+                                /*modify_normal(node, othernode, n_B);
                                 n_B /= norm(n_rB);
-                                n_A = -n_B;
+                                n_A = -n_B;*/
 
                                 Vector2D& p_ik{ node.pn };
                                 Vector2D& other_p_ik{ othernode.pn };
