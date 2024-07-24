@@ -80,8 +80,8 @@ void Particle::show() const
 // ****************************    NODE    ***************************************
 // Constructor to initialize member variables
 Node::Node() :
-    nid{ 0 }, mn{ 0.0 }, xn{}, vn{}, an{}, pn{},
-    fint{}, fext{}, ftot{}, fbc{}, bn{}, normal{}
+    nid{ 0 }, mn{ 0.0 }, xn{}, xcn{}, vn{}, an{}, pn{},
+    fint{}, fext{}, ftot{}, fbc{}, fct{}, bn{}, normal{}
 {
     // Initialization list is used to set initial values for member variables
 }

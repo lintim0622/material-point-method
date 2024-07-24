@@ -66,6 +66,7 @@ public:
 	int nid; // id
 	double mn; // mass
 	Vector2D xn; // position
+	Vector2D xcn; // centroid position
 	Vector2D vn; // velocity
 	Vector2D an; // acceleration
 	Vector2D pn; // momentum
@@ -73,6 +74,7 @@ public:
 	Vector2D fext; // external force
 	Vector2D ftot; // external force
 	Vector2D fbc; // boundary force
+	Vector2D fct; // contact force
 	Vector2D bn; // body force
 	Vector2D normal; // normal vector
 };

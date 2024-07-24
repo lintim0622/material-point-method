@@ -24,6 +24,9 @@ public:
 					   std::vector<Boundary>& bcArray,
 					   const std::function<double(double)>& decayFunction);
 
+	// contact algorithm
+	void contact(mesh_list::iterator itmsh);
+
 	// output solution information
 	void data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const;
 
@@ -97,3 +100,5 @@ private:
 static double layer(double r, const std::function<double(double)>& decayFunction);
 
 static double norm(const Vector2D& vector);
+
+void modify_normal(Node& node, Node& other_node, Vector2D& nB);

@@ -21,9 +21,11 @@ int main() {
     elastic.verify_time_step(DT);
 
     // creat mesh object
-    Mesh msh(PARTICLEFILE, NODEFILE, elastic);
+    Mesh mshA(PARTICLEFILEA, NODEFILE, elastic);
+    Mesh mshB(PARTICLEFILEB, NODEFILE, elastic);
     mesh_list mshs;
-    mshs.push_back(std::make_unique<Mesh>(std::move(msh)));
+    mshs.push_back(std::make_unique<Mesh>(std::move(mshA)));
+    mshs.push_back(std::make_unique<Mesh>(std::move(mshB)));
 
     // creat boundary object
     std::vector<Boundary> bcArray{ bcSet() };
@@ -62,10 +64,7 @@ int main() {
     std::chrono::duration<double> duration = end - start;
 
     // Output the execution time
-    std::cout << "Finished!\n";
     std::cout << "Execution time: " << duration.count() << " seconds\n";
-
-    std::cout << "end" << std::endl;
     return 0;
 }
 
@@ -78,10 +77,10 @@ std::vector<Boundary> bcSet()
     Boundary bc3{ "slip", Vector2D(1.5,   1.5), Vector2D(-1.5,  1.5) };
     Boundary bc4{ "slip", Vector2D(-1.5,  1.5), Vector2D(-1.5, -1.5) };
 
-    bc1.setNbc(Vector2D(0.0, 1.0));
+    bc1.setNbc(Vector2D(0.0,  1.0));
     bc2.setNbc(Vector2D(-1.0, 0.0));
     bc3.setNbc(Vector2D(0.0, -1.0));
-    bc4.setNbc(Vector2D(1.0, 0.0));
+    bc4.setNbc(Vector2D(1.0,  0.0));
 
     bc1.setMu(0.0);
     bc2.setMu(0.0);

@@ -20,14 +20,15 @@ void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
                       const std::function<double(double)>& decayFunction)
 {
     // for each mesh
-    for (std::unique_ptr<Mesh>& msh : _meshs)
+    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
     {
-        this->calculateParticleInfo(msh);
-        this->particleToNode(msh);
-        this->nodalSolution(msh);
-        this->frameBoundary(msh, bcArray, decayFunction);
-        this->nodeToParticle(msh, nowTime);
-        this->updateParticles(msh);
+        this->calculateParticleInfo(*itmsh);
+        this->particleToNode(*itmsh);
+        this->nodalSolution(*itmsh);
+        this->frameBoundary(*itmsh, bcArray, decayFunction);
+        this->contact(itmsh);
+        this->nodeToParticle(*itmsh, nowTime);
+        this->updateParticles(*itmsh);
     }
 }
 
@@ -121,6 +122,12 @@ void Solve::particleToNode(std::unique_ptr<Mesh>& msh)
         ie.n2->normal += ip.mp * ip.dN2;
         ie.n3->normal += ip.mp * ip.dN3;
         ie.n4->normal += ip.mp * ip.dN4;
+
+        // nodal centroid position->xci
+        ie.n1->xcn += ip.mp * ip.xp * ip.N1;
+        ie.n2->xcn += ip.mp * ip.xp * ip.N2;
+        ie.n3->xcn += ip.mp * ip.xp * ip.N3;
+        ie.n4->xcn += ip.mp * ip.xp * ip.N4;
     }
 }
 
@@ -130,9 +137,8 @@ void Solve::nodalSolution(std::unique_ptr<Mesh>& msh)
     {
         if (node.mn > 0.0)
         {
-            // normalization -> normal vector
-            double nNorm{ std::sqrt(std::pow(node.normal[0], 2) + std::pow(node.normal[1], 2)) };
-            node.normal /= nNorm;
+            // centroid_position
+            node.xcn /= node.mn;
 
             // nodal external force
             node.fext = node.bn;
@@ -294,6 +300,100 @@ void Solve::frameBoundary(std::unique_ptr<Mesh>& msh,
     }
 }
 
+void modify_normal(Node& node, Node& other_node, Vector2D& nB)
+{
+    Vector2D d_ri = node.xcn - other_node.xcn;
+    if (nB.dot(d_ri) < 0.0)
+        nB * (-1.0);
+}
+    
+
+/*   contact algorithm   */
+void Solve::contact(mesh_list::iterator itmsh)
+{
+    std::unique_ptr<Mesh>& mshA{ *itmsh };
+    for (mesh_list::iterator otmsh = std::next(itmsh); otmsh != _meshs.end(); ++otmsh)
+    {
+        std::unique_ptr<Mesh>& mshB{ *otmsh };
+        for (Node& node : mshA->nodes)
+        {
+            if (node.mn > 0.0)
+            {
+                Vector2D& n_rA{ node.normal };
+                double& m_ik{ node.mn };
+                Vector2D& vtr_iL{ node.vn };
+
+                for (Node& othernode : mshB->nodes)
+                {
+                    if (othernode.mn > 0.0)
+                    {
+                        Vector2D& n_rB{ othernode.normal };
+                        double& other_m_ik{ othernode.mn };
+                        Vector2D& other_vtr_iL{ othernode.vn };
+                        if (node.nid == othernode.nid)
+                        {
+                            Vector2D n_A{ n_rA };
+                            Vector2D n_B{ n_rB };
+                            if (mshA->material.E > mshB->material.E)
+                                n_B = -n_rA;
+
+                            else if (mshA->material.E < mshB->material.E) {}
+
+                            else
+                            {
+                                n_rA /= norm(n_rA);
+                                n_rB /= norm(n_rB);
+                                n_A = n_rA - n_rB;
+                                if (n_rA.dot(n_rB) > 0.0)
+                                    n_A = n_rA + n_rB;
+                                n_B = -n_A;
+                            }
+
+                            modify_normal(node, othernode, n_B);
+                            n_B /= norm(n_rB);
+                            n_A = -n_B;
+
+                            Vector2D& p_ik{ node.pn };
+                            Vector2D& other_p_ik{ othernode.pn };
+                            Vector2D f_itotk{ node.fint + node.fext };
+                            Vector2D other_f_itotk{ othernode.fint + othernode.fext };
+
+                            double mck = m_ik + other_m_ik;
+                            Vector2D vck{ (p_ik + other_p_ik) / mck };
+                            Vector2D fck{ f_itotk + other_f_itotk };
+                            Vector2D ack{ fck / mck };
+                            Vector2D vcL{ vck + DT * ack };
+
+                            double vcLn{ vcL.dot(n_B) };
+                            double vtr_iLn{ vtr_iL.dot(n_B) };
+                            double other_vtr_iLn{ other_vtr_iL.dot(n_B) };
+                            double vrnL = vtr_iLn - other_vtr_iLn;
+                            if (vrnL < 0)
+                            {
+                                // calculate object A -> - f_totn + ((m_ik * vcL - p_ik) / dt).dot(NrB)
+                                Vector2D f_icn{ (m_ik / DT) * (vcLn - vtr_iLn) * n_B };
+                                Vector2D a_icn{ f_icn / m_ik };
+
+                                node.fct += f_icn;
+                                node.an += a_icn;
+                                node.vn += DT * a_icn;
+
+                                // calculate object B->slip contact
+                                Vector2D other_f_icn{ -f_icn };
+                                Vector2D other_a_ikn{ other_f_icn / other_m_ik };
+
+                                othernode.fct += other_f_icn;
+                                othernode.an += other_a_ikn;
+                                othernode.vn += DT * other_a_ikn;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Solve::updateParticles(std::unique_ptr<Mesh>& msh)
 {
     for (const std::pair<const int, int>& it : msh->pem) 
@@ -328,6 +428,7 @@ void Solve::resetNode()
             if (node.mn > 0.0)
             {
                 node.mn = 0.0;
+                node.xcn.setZero();
                 node.vn.setZero();
                 node.an.setZero();
                 node.pn.setZero();
@@ -335,6 +436,7 @@ void Solve::resetNode()
                 node.fext.setZero();
                 node.ftot.setZero();
                 node.fbc.setZero();
+                node.fct.setZero();
                 node.bn.setZero();
                 node.normal.setZero();
             }
@@ -342,36 +444,42 @@ void Solve::resetNode()
     }
 }
 
-void Solve::data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const {
+void Solve::data_output(const std::string& pfile_name_base, const std::string& nfile_name_base, bool append) const {
     std::ios_base::openmode mode = std::ios_base::out;
     if (append) {
         mode |= std::ios_base::app;
     }
 
-    // Particle data output
-    std::ofstream pfile(pfile_name, mode);
-    if (!pfile.is_open()) {
-        std::cerr << "Failed to open particle file: " << pfile_name << std::endl;
-        return;
-    }
+    for (size_t i = 0; i < _meshs.size(); ++i) {
+        const std::unique_ptr<Mesh>& msh = _meshs[i];
 
-    if (!append) {
-        // Assuming particle_info_name contains the headers for the particle file
-        pfile << std::setw(8) << "PID"
-            << std::setw(14) << "Mass"
-            << std::setw(14) << "PosX"
-            << std::setw(14) << "PosY"
-            << std::setw(14) << "VelX"
-            << std::setw(14) << "VelY"
-            << std::setw(14) << "StressXX"
-            << std::setw(14) << "StressYY"
-            << std::setw(14) << "StressXY"
-            << std::setw(14) << "StrainXX"
-            << std::setw(14) << "StrainYY"
-            << std::setw(14) << "StrainXY" << std::endl;
-    }
+        // Generate filenames with index
+        std::string pfile_name = pfile_name_base + "_mesh" + std::to_string(i) + ".txt";
+        std::string nfile_name = nfile_name_base + "_mesh" + std::to_string(i) + ".txt";
 
-    for (const std::unique_ptr<Mesh>& msh : _meshs) {
+        // Particle data output
+        std::ofstream pfile(pfile_name, mode);
+        if (!pfile.is_open()) {
+            std::cerr << "Failed to open particle file: " << pfile_name << std::endl;
+            continue;
+        }
+
+        if (!append) {
+            // Assuming particle_info_name contains the headers for the particle file
+            pfile << std::setw(8) << "PID"
+                << std::setw(14) << "Mass"
+                << std::setw(14) << "PosX"
+                << std::setw(14) << "PosY"
+                << std::setw(14) << "VelX"
+                << std::setw(14) << "VelY"
+                << std::setw(14) << "StressXX"
+                << std::setw(14) << "StressYY"
+                << std::setw(14) << "StressXY"
+                << std::setw(14) << "StrainXX"
+                << std::setw(14) << "StrainYY"
+                << std::setw(14) << "StrainXY" << std::endl;
+        }
+
         for (const Particle& particle : msh->particles) {
             pfile << std::setw(8) << particle.pid
                 << std::setw(14) << std::scientific << particle.mp
@@ -386,36 +494,34 @@ void Solve::data_output(const std::string& pfile_name, const std::string& nfile_
                 << std::setw(14) << particle.ep[1]
                 << std::setw(14) << particle.ep[2] << std::endl;
         }
-    }
-    pfile.close();
-    // std::cout << pfile_name << " has been output" << std::endl;
+        pfile.close();
+        // std::cout << pfile_name << " has been output" << std::endl;
 
-    // Node data output
-    std::ofstream nfile(nfile_name, mode);
-    if (!nfile.is_open()) {
-        std::cerr << "Failed to open node file: " << nfile_name << std::endl;
-        return;
-    }
+        // Node data output
+        std::ofstream nfile(nfile_name, mode);
+        if (!nfile.is_open()) {
+            std::cerr << "Failed to open node file: " << nfile_name << std::endl;
+            continue;
+        }
 
-    if (!append) {
-        // Assuming node_info_name contains the headers for the node file
-        nfile << std::setw(8) << "NID"
-            << std::setw(14) << "Mass"
-            << std::setw(14) << "PosX"
-            << std::setw(14) << "PosY"
-            << std::setw(14) << "VelX"
-            << std::setw(14) << "VelY"
-            << std::setw(14) << "AccX"
-            << std::setw(14) << "AccY"
-            << std::setw(14) << "FIntX"
-            << std::setw(14) << "FIntY"
-            << std::setw(14) << "FExtX"
-            << std::setw(14) << "FExtY" 
-            << std::setw(14) << "FBCX"
-            << std::setw(14) << "FBCY" << std::endl;
-    }
+        if (!append) {
+            // Assuming node_info_name contains the headers for the node file
+            nfile << std::setw(8) << "NID"
+                << std::setw(14) << "Mass"
+                << std::setw(14) << "PosX"
+                << std::setw(14) << "PosY"
+                << std::setw(14) << "VelX"
+                << std::setw(14) << "VelY"
+                << std::setw(14) << "AccX"
+                << std::setw(14) << "AccY"
+                << std::setw(14) << "FIntX"
+                << std::setw(14) << "FIntY"
+                << std::setw(14) << "FExtX"
+                << std::setw(14) << "FExtY"
+                << std::setw(14) << "FBCX"
+                << std::setw(14) << "FBCY" << std::endl;
+        }
 
-    for (const std::unique_ptr<Mesh>& msh : _meshs) {
         for (const Node& node : msh->nodes) {
             if (node.mn > 0.0) {
                 nfile << std::setw(8) << node.nid
@@ -434,10 +540,110 @@ void Solve::data_output(const std::string& pfile_name, const std::string& nfile_
                     << std::setw(14) << node.fbc[1] << std::endl;
             }
         }
+        nfile.close();
+        // std::cout << nfile_name << " has been output" << std::endl;
     }
-    nfile.close();
-    // std::cout << nfile_name << " has been output" << std::endl;
 }
+
+
+//void Solve::data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const {
+//    std::ios_base::openmode mode = std::ios_base::out;
+//    if (append) {
+//        mode |= std::ios_base::app;
+//    }
+//
+//    // Particle data output
+//    std::ofstream pfile(pfile_name, mode);
+//    if (!pfile.is_open()) {
+//        std::cerr << "Failed to open particle file: " << pfile_name << std::endl;
+//        return;
+//    }
+//
+//    if (!append) {
+//        // Assuming particle_info_name contains the headers for the particle file
+//        pfile << std::setw(8) << "PID"
+//            << std::setw(14) << "Mass"
+//            << std::setw(14) << "PosX"
+//            << std::setw(14) << "PosY"
+//            << std::setw(14) << "VelX"
+//            << std::setw(14) << "VelY"
+//            << std::setw(14) << "StressXX"
+//            << std::setw(14) << "StressYY"
+//            << std::setw(14) << "StressXY"
+//            << std::setw(14) << "StrainXX"
+//            << std::setw(14) << "StrainYY"
+//            << std::setw(14) << "StrainXY" << std::endl;
+//    }
+//
+//    for (const std::unique_ptr<Mesh>& msh : _meshs) {
+//        for (const Particle& particle : msh->particles) {
+//            pfile << std::setw(8) << particle.pid
+//                << std::setw(14) << std::scientific << particle.mp
+//                << std::setw(14) << particle.xp[0]
+//                << std::setw(14) << particle.xp[1]
+//                << std::setw(14) << particle.vp[0]
+//                << std::setw(14) << particle.vp[1]
+//                << std::setw(14) << particle.ssp[0]
+//                << std::setw(14) << particle.ssp[1]
+//                << std::setw(14) << particle.ssp[2]
+//                << std::setw(14) << particle.ep[0]
+//                << std::setw(14) << particle.ep[1]
+//                << std::setw(14) << particle.ep[2] << std::endl;
+//        }
+//    }
+//    pfile.close();
+//    // std::cout << pfile_name << " has been output" << std::endl;
+//
+//    // Node data output
+//    std::ofstream nfile(nfile_name, mode);
+//    if (!nfile.is_open()) {
+//        std::cerr << "Failed to open node file: " << nfile_name << std::endl;
+//        return;
+//    }
+//
+//    if (!append) {
+//        // Assuming node_info_name contains the headers for the node file
+//        nfile << std::setw(8) << "NID"
+//            << std::setw(14) << "Mass"
+//            << std::setw(14) << "PosX"
+//            << std::setw(14) << "PosY"
+//            << std::setw(14) << "VelX"
+//            << std::setw(14) << "VelY"
+//            << std::setw(14) << "AccX"
+//            << std::setw(14) << "AccY"
+//            << std::setw(14) << "FIntX"
+//            << std::setw(14) << "FIntY"
+//            << std::setw(14) << "FExtX"
+//            << std::setw(14) << "FExtY" 
+//            << std::setw(14) << "FBCX"
+//            << std::setw(14) << "FBCY" << std::endl;
+//    }
+//
+//    for (const std::unique_ptr<Mesh>& msh : _meshs) {
+//        for (const Node& node : msh->nodes) {
+//            if (node.mn > 0.0) {
+//                nfile << std::setw(8) << node.nid
+//                    << std::setw(14) << std::scientific << node.mn
+//                    << std::setw(14) << node.xn[0]
+//                    << std::setw(14) << node.xn[1]
+//                    << std::setw(14) << node.vn[0]
+//                    << std::setw(14) << node.vn[1]
+//                    << std::setw(14) << node.an[0]
+//                    << std::setw(14) << node.an[1]
+//                    << std::setw(14) << node.fint[0]
+//                    << std::setw(14) << node.fint[1]
+//                    << std::setw(14) << node.fext[0]
+//                    << std::setw(14) << node.fext[1]
+//                    << std::setw(14) << node.fbc[0]
+//                    << std::setw(14) << node.fbc[1]
+//                    << std::setw(14) << node.fct[0]
+//                    << std::setw(14) << node.fct[1] << std::endl;
+//            }
+//        }
+//    }
+//    nfile.close();
+//    // std::cout << nfile_name << " has been output" << std::endl;
+//}
 
 // ****************************    BOUNDARY    ***************************************
 // Constructor

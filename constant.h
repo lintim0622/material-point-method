@@ -22,7 +22,8 @@ static const double RHO = 960.0;
 static const double K = 0.003E+9;
 static const double G = 0.0006E+9;
 
-static const std::string PARTICLEFILE{ "PARTICLE INFO A.txt" };
+static const std::string PARTICLEFILEA{ "PARTICLE INFO A.txt" };
+static const std::string PARTICLEFILEB{ "PARTICLE INFO B.txt" };
 static const std::string NODEFILE{ "NODAL POSITION.txt" };
 
 
