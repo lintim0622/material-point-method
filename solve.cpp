@@ -19,14 +19,22 @@ Solve::~Solve()
 void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
                       const std::function<double(double)>& decayFunction)
 {
-    // for each mesh
+    // P2G
     for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
     {
         this->calculateParticleInfo(*itmsh);
         this->particleToNode(*itmsh);
         this->nodalSolution(*itmsh);
         this->frameBoundary(*itmsh, bcArray, decayFunction);
+    }
+    // contact
+    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
+    {
         this->contact(itmsh);
+    }
+    // G2P
+    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
+    {
         this->nodeToParticle(*itmsh, nowTime);
         this->updateParticles(*itmsh);
     }
@@ -311,11 +319,9 @@ void modify_normal(Node& node, Node& other_node, Vector2D& nB)
 /*   contact algorithm   */
 void Solve::contact(mesh_list::iterator itmsh)
 {
-    std::unique_ptr<Mesh>& mshA{ *itmsh };
     for (mesh_list::iterator otmsh = std::next(itmsh); otmsh != _meshs.end(); ++otmsh)
     {
-        std::unique_ptr<Mesh>& mshB{ *otmsh };
-        for (Node& node : mshA->nodes)
+        for (Node& node : (*itmsh)->nodes)
         {
             if (node.mn > 0.0)
             {
@@ -323,7 +329,7 @@ void Solve::contact(mesh_list::iterator itmsh)
                 double& m_ik{ node.mn };
                 Vector2D& vtr_iL{ node.vn };
 
-                for (Node& othernode : mshB->nodes)
+                for (Node& othernode : (*otmsh)->nodes)
                 {  
                     if (othernode.mn > 0.0)
                     {
@@ -335,10 +341,10 @@ void Solve::contact(mesh_list::iterator itmsh)
                         {
                             Vector2D n_A{ n_rA };
                             Vector2D n_B{ n_rB };
-                            if (mshA->material.E > mshB->material.E)
+                            if ((*itmsh)->material.E > (*otmsh)->material.E)
                                 n_B = -n_rA;
 
-                            else if (mshA->material.E < mshB->material.E) {}
+                            else if ((*itmsh)->material.E < (*otmsh)->material.E) {}
 
                             else
                             {
@@ -520,7 +526,9 @@ void Solve::data_output(const std::string& pfile_name_base, const std::string& n
                 << std::setw(14) << "FExtX"
                 << std::setw(14) << "FExtY"
                 << std::setw(14) << "FBCX"
-                << std::setw(14) << "FBCY" << std::endl;
+                << std::setw(14) << "FBCY"
+                << std::setw(14) << "FCTX"
+                << std::setw(14) << "FCTY" << std::endl;
         }
 
         for (const Node& node : msh->nodes) {
@@ -538,7 +546,9 @@ void Solve::data_output(const std::string& pfile_name_base, const std::string& n
                     << std::setw(14) << node.fext[0]
                     << std::setw(14) << node.fext[1]
                     << std::setw(14) << node.fbc[0]
-                    << std::setw(14) << node.fbc[1] << std::endl;
+                    << std::setw(14) << node.fbc[1] 
+                    << std::setw(14) << node.fct[0]
+                    << std::setw(14) << node.fct[1] << std::endl;
             }
         }
         nfile.close();
@@ -546,7 +556,7 @@ void Solve::data_output(const std::string& pfile_name_base, const std::string& n
     }
 }
 
-
+// previous version
 //void Solve::data_output(const std::string& pfile_name, const std::string& nfile_name, bool append) const {
 //    std::ios_base::openmode mode = std::ios_base::out;
 //    if (append) {
