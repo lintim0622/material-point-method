@@ -319,7 +319,7 @@ void Solve::contact(mesh_list::iterator itmsh)
         {
             if (node.mn > 0.0)
             {
-                Vector2D& n_rA{ node.normal };
+                Vector2D n_rA{ node.normal };
                 double& m_ik{ node.mn };
                 Vector2D& vtr_iL{ node.vn };
 
@@ -327,7 +327,7 @@ void Solve::contact(mesh_list::iterator itmsh)
                 {
                     if (othernode.mn > 0.0)
                     {
-                        Vector2D& n_rB{ othernode.normal };
+                        Vector2D n_rB{ othernode.normal };
                         double& other_m_ik{ othernode.mn };
                         Vector2D& other_vtr_iL{ othernode.vn };
                         if (node.nid == othernode.nid)
@@ -368,7 +368,7 @@ void Solve::contact(mesh_list::iterator itmsh)
                             double vtr_iLn{ vtr_iL.dot(n_B) };
                             double other_vtr_iLn{ other_vtr_iL.dot(n_B) };
                             double vrnL = vtr_iLn - other_vtr_iLn;
-                            if (vrnL < 0)
+                            if (vrnL < 0.0)
                             {
                                 // calculate object A -> - f_totn + ((m_ik * vcL - p_ik) / dt).dot(NrB)
                                 Vector2D f_icn{ (m_ik / DT) * (vcLn - vtr_iLn) * n_B };

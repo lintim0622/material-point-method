@@ -44,7 +44,7 @@ int main() {
         sol.algorithm(t, bcArray, decayFunction);
 
         // output
-        sol.data_output("particle_output.txt", "node_output.txt", true);
+        sol.data_output("particle_output", "node_output", true);
 
         // reset nodal value
         sol.resetNode();
