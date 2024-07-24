@@ -324,12 +324,13 @@ void Solve::contact(mesh_list::iterator itmsh)
                 Vector2D& vtr_iL{ node.vn };
 
                 for (Node& othernode : mshB->nodes)
-                {
+                {  
                     if (othernode.mn > 0.0)
                     {
                         Vector2D n_rB{ othernode.normal };
                         double& other_m_ik{ othernode.mn };
                         Vector2D& other_vtr_iL{ othernode.vn };
+
                         if (node.nid == othernode.nid)
                         {
                             Vector2D n_A{ n_rA };
