@@ -307,11 +307,11 @@ void Solve::frameBoundary(std::unique_ptr<Mesh>& msh,
     }
 }
 
-void modify_normal(Node& node, Node& other_node, Vector2D& nB)
+void modify_normal(Node& node, Node& other_node, Vector2D* nB)
 {
     Vector2D d_ri = node.xcn - other_node.xcn;
-    if (nB.dot(d_ri) < 0.0)
-        nB *= (-1.0);
+    if ((*nB).dot(d_ri) < 0.0)
+        (*nB) *= (-1.0);
 }
     
 
@@ -345,16 +345,10 @@ void Solve::contact()
                                 if ((*itmsh)->material.E > (*otmsh)->material.E)
                                 {
                                     n_B = -n_rA;
-                                    modify_normal(node, othernode, n_B);
-                                    n_B /= norm(n_rB);
-                                    n_A = -n_B;
                                 }
                                 else if ((*itmsh)->material.E < (*otmsh)->material.E)
                                 {
                                     n_B = n_rB;
-                                    modify_normal(node, othernode, n_B);
-                                    n_B /= norm(n_rB);
-                                    n_A = -n_B;
                                 }
                                 else
                                 {
@@ -362,18 +356,20 @@ void Solve::contact()
                                     n_rB /= norm(n_rB);
                                     n_A = n_rA - n_rB;
                                     if (n_rA.dot(n_rB) > 0.0)
+                                    {
                                         n_A = n_rA + n_rB;
+                                    }                                       
                                     n_B = -n_A;
                                 }
 
-                                /*modify_normal(node, othernode, n_B);
+                                modify_normal(node, othernode, &n_B);
                                 n_B /= norm(n_rB);
-                                n_A = -n_B;*/
+                                n_A = -n_B;
 
                                 Vector2D& p_ik{ node.pn };
                                 Vector2D& other_p_ik{ othernode.pn };
-                                Vector2D f_itotk{ node.fint + node.fext };
-                                Vector2D other_f_itotk{ othernode.fint + othernode.fext };
+                                Vector2D& f_itotk{ node.ftot };
+                                Vector2D& other_f_itotk{ othernode.ftot };
 
                                 double mck = m_ik + other_m_ik;
                                 Vector2D vck{ (p_ik + other_p_ik) / mck };

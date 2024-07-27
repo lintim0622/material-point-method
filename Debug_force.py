@@ -430,7 +430,7 @@ if __name__ == "__main__":
     tot_node_num = 169 # , 1681
     tot_ptc_num = 16
     MPMRecStep = 1
-    plot_form = "nodal boundary force" # , particle velocity, collision force , particle stress, total force, sum mass
+    plot_form = "collision force" # nodal boundary force, particle velocity,  , particle stress, total force, sum mass
     
     if (theta == 0):
         theta = 0

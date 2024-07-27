@@ -101,4 +101,4 @@ static double layer(double r, const std::function<double(double)>& decayFunction
 
 static double norm(const Vector2D& vector);
 
-void modify_normal(Node& node, Node& other_node, Vector2D& nB);
+void modify_normal(Node& node, Node& other_node, Vector2D* nB);
