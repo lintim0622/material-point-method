@@ -46,8 +46,16 @@
     <Text Include="PARTICLE INFO A.txt">
       <Filter>資源檔</Filter>
     </Text>
-    <Text Include="NODAL POSITION.txt.txt">
+    <Text Include="NODAL POSITION.txt">
       <Filter>資源檔</Filter>
     </Text>
+    <Text Include="PARTICLE INFO B.txt">
+      <Filter>資源檔</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data_analysis_2D.py">
+      <Filter>來源檔案</Filter>
+    </None>
   </ItemGroup>
 </Project>

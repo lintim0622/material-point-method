@@ -41,12 +41,13 @@ public:
     double dot(const Vector2D& other) const;
 
     // normalized vector
-    Vector2D normalized() const;
+    void normalized();
+
+    // friend function
+    friend Vector2D operator*(double scalar, const Vector2D& vector);
+    friend std::ostream& operator<<(std::ostream& os, const Vector2D& vector);
 
 private:
     double _x;
     double _y;
 };
-
-Vector2D operator*(double scalar, const Vector2D& vector);
-std::ostream& operator<<(std::ostream& os, const Vector2D& vector);

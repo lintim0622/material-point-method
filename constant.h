@@ -27,4 +27,3 @@ static const std::string PARTICLEFILEB{ "PARTICLE INFO B.txt" };
 static const std::string NODEFILE{ "NODAL POSITION.txt" };
 
 
-

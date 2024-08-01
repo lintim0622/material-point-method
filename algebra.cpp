@@ -148,12 +148,13 @@ double Vector2D::dot(const Vector2D& other) const
 }
 
 // Normalized vector
-Vector2D Vector2D::normalized() const 
+void Vector2D::normalized() 
 {
     double length = std::sqrt(_x * _x + _y * _y);
     if (length == 0.0)
         throw std::runtime_error("Cannot normalize a zero-length vector");
-    return Vector2D(_x / length, _y / length);
+    _x /= length;
+    _y /= length;
 }
 
 // Overload operator* to multiply a scalar with a Vector2D object

@@ -151,8 +151,12 @@
     <ClInclude Include="solve.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="NODAL POSITION.txt.txt" />
+    <Text Include="NODAL POSITION.txt" />
     <Text Include="PARTICLE INFO A.txt" />
+    <Text Include="PARTICLE INFO B.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data_analysis_2D.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

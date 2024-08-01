@@ -3,7 +3,7 @@
 #include "mesh.h"
 #include "solve.h"
 
-std::vector<Boundary> bcSet();
+static std::vector<Boundary> bcSet();
 
 // define decay function
 std::function<double(double)> decayFunction = [](double x)
@@ -49,10 +49,9 @@ int main() {
         // reset nodal value
         sol.resetNode();
 
-        if (step % print_interval == 0) {
+        if (step % print_interval == 0)
             std::cout << "t = " << t << std::endl;
-        }
-        // std::cout << "now time: " << t << std::endl;
+
         t += DT;
         step++;
     }
@@ -68,14 +67,15 @@ int main() {
     return 0;
 }
 
-std::vector<Boundary> bcSet() 
+static std::vector<Boundary> bcSet()
 {
     std::vector<Boundary> bcArray;
 
-    Boundary bc1{ "slip", Vector2D(-1.5, -1.5), Vector2D(1.5,  -1.5) };
-    Boundary bc2{ "slip", Vector2D(1.5,  -1.5), Vector2D(1.5,   1.5) };
-    Boundary bc3{ "slip", Vector2D(1.5,   1.5), Vector2D(-1.5,  1.5) };
-    Boundary bc4{ "slip", Vector2D(-1.5,  1.5), Vector2D(-1.5, -1.5) };
+    double bcvalue = 1.5;
+    Boundary bc1{ "slip", Vector2D(-bcvalue, -bcvalue), Vector2D(bcvalue,  -bcvalue) };
+    Boundary bc2{ "slip", Vector2D(bcvalue,  -bcvalue), Vector2D(bcvalue,   bcvalue) };
+    Boundary bc3{ "slip", Vector2D(bcvalue,   bcvalue), Vector2D(-bcvalue,  bcvalue) };
+    Boundary bc4{ "slip", Vector2D(-bcvalue,  bcvalue), Vector2D(-bcvalue, -bcvalue) };
 
     bc1.setNbc(Vector2D(0.0,  1.0));
     bc2.setNbc(Vector2D(-1.0, 0.0));
