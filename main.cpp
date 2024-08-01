@@ -20,18 +20,11 @@ int main() {
     Material elastic{ RHO, K, G };
     elastic.verify_time_step(DT);
 
-    // creat mesh object
-    Mesh mshA(PARTICLEFILEA, NODEFILE, elastic);
-    Mesh mshB(PARTICLEFILEB, NODEFILE, elastic);
-    mesh_list mshs;
-    mshs.push_back(std::make_unique<Mesh>(std::move(mshA)));
-    mshs.push_back(std::make_unique<Mesh>(std::move(mshB)));
-
     // creat boundary object
     std::vector<Boundary> bcArray{ bcSet() };
 
     // creat solver object
-    Solve sol{ mshs };
+    Solve sol{ PARTICLEFILE, NODEFILE, elastic };
     sol.setSimulationTime(ENDTIME);
 
     // run

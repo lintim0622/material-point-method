@@ -110,10 +110,10 @@ bool Element::contains(const Particle& particle) const
 }
 
 // ****************************    MESH    ***************************************
-Mesh::Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material)
+Mesh::Mesh(const std::string& nodeFile, const Material& material)
     : material{ material }
 {
-    initParticleInfo(particleFile, material);
+    // initParticleInfo(line, material);
     initNodeInfo(nodeFile);
     createElements();
     createElementParticleMap();
@@ -124,32 +124,25 @@ Mesh::~Mesh()
     // std::cout << "The mesh has been deleted\n";
 }
 
-void Mesh::initParticleInfo(const std::string& filePath, const Material& material)
+void Mesh::initParticleInfo(const std::string& line)
 {
-    std::ifstream file(filePath);
-    std::string line;
-    while (std::getline(file, line))
-    {
-        // Skip lines that start with #
-        if (line.empty() || line[0] == '#')
-            continue;
+    // Skip lines that start with #
+    if (line.empty() || line[0] == '#')
+        return;
 
-        std::istringstream iss(line);
-        Particle ip{};
-        iss >> ip.pid
-            >> ip.Vol
-            >> ip.xp[0] >> ip.xp[1]
-            >> ip.vp[0] >> ip.vp[1]
-            >> ip.ep[0] >> ip.ep[1] >> ip.ep[2]
-            >> ip.bp[0] >> ip.bp[1];
+    std::istringstream iss(line);
+    Particle ip{};
+    iss >> ip.pid
+        >> ip.Vol
+        >> ip.xp[0] >> ip.xp[1]
+        >> ip.vp[0] >> ip.vp[1]
+        >> ip.ep[0] >> ip.ep[1] >> ip.ep[2]
+        >> ip.bp[0] >> ip.bp[1];
 
-        ip.calculateSpecificStress(material);
+    ip.calculateSpecificStress(material);
 
-        if (ip.Vol != 0.0)
-            particles.push_back(ip);
-    }
-    // std::cout << particles.size() << std::endl;
-    file.close();
+    if (ip.Vol != 0.0)
+        particles.push_back(ip);
 }
 
 void Mesh::createElements()
@@ -194,22 +187,6 @@ void Mesh::clearMapId()
 {
     pem.clear();
 }
-
-//Element* Mesh::findElementForParticle(const Particle& particle)
-// {
-//    auto it = std::find_if(particles.begin(), particles.end(), [&](const Particle& p) { 
-//        return p.xp[0] == particle.xp[0] && p.xp[1] == particle.xp[1]; 
-//    });
-// 
-//    if (it != particles.end())
-//    {
-//        int particleIndex = std::distance(particles.begin(), it);
-//        if (pem.find(particleIndex) != pem.end()) {
-//            return &elements[pem[particleIndex]];
-//        }
-//    }
-//    return nullptr;
-//}
 
 void Mesh::initNodeInfo(const std::string& filename)
 {

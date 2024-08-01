@@ -100,7 +100,7 @@ public:
 
 class Mesh {
 public:
-	Mesh(const std::string& particleFile, const std::string& nodeFile, const Material& material);
+	Mesh(const std::string& nodeFile, const Material& material);
 
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -114,9 +114,11 @@ public:
 	void showNodeInitInfo() const;
 	void showElementInfo() const;
 
+	// read initial particle information and calculate
+	void initParticleInfo(const std::string& line);
+
 	void createElementParticleMap();
 	void clearMapId();
-	// Element* findElementForParticle(const Particle& particle);
 
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
@@ -127,9 +129,6 @@ public:
 	std::map<int, int> pem; 
 
 private:
-	// read initial particle information and calculate
-	void initParticleInfo(const std::string& filePath, const Material& material);
-
 	// read initial Grid information
 	void initNodeInfo(const std::string& filename);
 

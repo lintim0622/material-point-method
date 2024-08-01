@@ -1,0 +1,1 @@
+    ax.plot(1e+2, 1e+2, "o", markersize=10, color="tab:blue", label="block") 

@@ -10,7 +10,7 @@ typedef std::vector<std::unique_ptr<Mesh>> mesh_list;
 class Boundary;
 class Solve {
 public:
-	Solve(mesh_list& meshs);
+	Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material);
 	~Solve();
 
 	inline void setSimulationTime(double et) { endTime = et; }

@@ -2,14 +2,41 @@
 #include "solve.h"
 
 // ****************************    SOLVE    ***************************************
-Solve::Solve(mesh_list& meshs)
+Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material)
 {
-	for (std::unique_ptr<Mesh>& msh : meshs)
+    std::ifstream file(particleFile);
+    std::string line;
+    std::unique_ptr<Mesh> mesh;
+
+    while (std::getline(file, line))
     {
-		_meshs.push_back(std::move(msh));
-	}
-	endTime = 0.0;
+        if (line.empty() || line[0] == '#') {
+            continue; // Skip comment lines
+        }
+
+        if (line.find("Particle") == 0) // Check if the line starts with "Particle"
+        {
+            if (mesh) {
+                _meshs.push_back(std::move(mesh));
+            }
+            mesh = std::make_unique<Mesh>(nodeFile, material);
+        }
+        else if (mesh)
+        {
+            mesh->initParticleInfo(line);
+        }
+    }
+
+    if (mesh) {
+        _meshs.push_back(std::move(mesh));
+    }
+
+    file.close();
+    endTime = 0.0;
 }
+
+
+
 
 Solve::~Solve()
 {

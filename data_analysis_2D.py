@@ -12,8 +12,9 @@ from sys import exit
 
 FilePath0 = r"particle_output_mesh0.txt"
 FilePath1 = r"particle_output_mesh1.txt"
+FilePath2 = r"particle_output_mesh2.txt"
 
-ptc_nums = [16, 16]
+ptc_nums = [16, 16, 16]
 node_num = 169
 
 StartTime = 0.0
@@ -42,6 +43,18 @@ with open(FilePath1, 'r') as file:
             xpB[i][0] = float(xpB[i][2])
             xpB[i][1] = float(xpB[i][3])
             xpB[i] = np.array([xpB[i][0] ,xpB[i][1]])
+            i += 1
+        # r += 1
+
+xpC = [0]*N
+with open(FilePath2, 'r') as file:
+    i, r = 0, 0
+    for text in file:
+        # if (r != 0):
+            xpC[i] = text.split()
+            xpC[i][0] = float(xpC[i][2])
+            xpC[i][1] = float(xpC[i][3])
+            xpC[i] = np.array([xpC[i][0] ,xpC[i][1]])
             i += 1
         # r += 1
 
@@ -87,6 +100,7 @@ def plot_fig(i, k):
     for j in range(int(i*ptc_nums[0]), int((i+1)*ptc_nums[0])):
         ax.plot(xpA[j][0], xpA[j][1], "o", markersize=3, color="tab:blue")
         ax.plot(xpB[j][0], xpB[j][1], "o", markersize=3, color="tab:green")
+        ax.plot(xpC[j][0], xpC[j][1], "o", markersize=3, color="tab:red")
     
     ax.plot(1e+2, 1e+2, "o", markersize=10, color="tab:blue", label="block") 
     ax.plot(1e+3, 1e+3, "s", markersize=10, color="tab:orange", label="Grid", markerfacecolor='none')
