@@ -64,7 +64,7 @@ static std::vector<Boundary> bcSet()
 {
     std::vector<Boundary> bcArray;
 
-    double bcvalue = 1.5;
+    static const double bcvalue = MAXBC;
     Boundary bc1{ "slip", Vector2D(-bcvalue, -bcvalue), Vector2D(bcvalue,  -bcvalue) };
     Boundary bc2{ "slip", Vector2D(bcvalue,  -bcvalue), Vector2D(bcvalue,   bcvalue) };
     Boundary bc3{ "slip", Vector2D(bcvalue,   bcvalue), Vector2D(-bcvalue,  bcvalue) };
