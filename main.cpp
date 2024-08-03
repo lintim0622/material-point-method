@@ -16,12 +16,12 @@ int main() {
     // Get the start time
     auto start = std::chrono::high_resolution_clock::now();
 
+    // creat boundary object
+    std::vector<Boundary> bcArray{ bcSet() };
+
     // creat material object
     Material elastic{ RHO, K, G };
     elastic.verify_time_step(DT);
-
-    // creat boundary object
-    std::vector<Boundary> bcArray{ bcSet() };
 
     // creat solver object
     Solve sol{ PARTICLEFILE, NODEFILE, elastic };

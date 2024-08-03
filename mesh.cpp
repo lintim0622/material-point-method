@@ -1,7 +1,7 @@
 #include "mesh.h"
 
 // ****************************    MATERIAL    ***************************************
-Material::Material(double rho, double K, double G) :
+Material::Material(double rho = 0.0, double K = 0.0, double G = 0.0) :
     rho{ rho }, K{ K }, G{ G }
 {
     E = 9.0 * K * G / (3.0 * K + G);

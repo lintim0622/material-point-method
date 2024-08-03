@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iomanip> // for std::setprecision
 #include <functional> // for std::function
+#include <unordered_map>
 
 #include "mesh.h"
 
@@ -34,12 +35,13 @@ public:
 	void resetNode();
 
 private:
+	// Function to read materials from a file
+	// std::unordered_map<int, Material> readMaterials(const std::string& filename);
 	void calculateParticleInfo(std::unique_ptr<Mesh>& msh);
 	void particleToNode(std::unique_ptr<Mesh>& msh);
 	void nodalSolution(std::unique_ptr<Mesh>& msh);
 	void nodeToParticle(std::unique_ptr<Mesh>& msh, double nowTime);
 	void updateParticles(std::unique_ptr<Mesh>& msh);
-	
 
 	mesh_list _meshs;
 	double endTime;

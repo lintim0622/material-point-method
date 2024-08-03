@@ -12,9 +12,8 @@ from sys import exit
 
 FilePath0 = r"particle_output_mesh0.txt"
 FilePath1 = r"particle_output_mesh1.txt"
-FilePath2 = r"particle_output_mesh2.txt"
 
-ptc_nums = [16, 16, 16]
+ptc_nums = [16, 16]
 node_num = 169
 
 StartTime = 0.0
@@ -46,27 +45,17 @@ with open(FilePath1, 'r') as file:
             i += 1
         # r += 1
 
-xpC = [0]*N
-with open(FilePath2, 'r') as file:
+xn = [0]*node_num    
+with open(r"NODAL POSITION.txt", 'r') as file:
     i, r = 0, 0
     for text in file:
-        # if (r != 0):
-            xpC[i] = text.split()
-            xpC[i][0] = float(xpC[i][2])
-            xpC[i][1] = float(xpC[i][3])
-            xpC[i] = np.array([xpC[i][0] ,xpC[i][1]])
+        if (r > 3):
+            xn[i] = text.split()
+            xn[i][0] = float(xn[i][0])
+            xn[i][1] = float(xn[i][1])
+            xn[i] = np.array(xn[i])
             i += 1
-        # r += 1
-
-xn = [0]*node_num    
-with open(r"nodal_position.txt", 'r') as file:
-    i = 0
-    for text in file:
-        xn[i] = text.split()
-        xn[i][0] = float(xn[i][0])
-        xn[i][1] = float(xn[i][1])
-        xn[i] = np.array(xn[i])
-        i += 1
+        r += 1
 
 Min_bc_val = np.min(xn)
 Max_bc_val = np.max(xn)
@@ -100,7 +89,6 @@ def plot_fig(i, k):
     for j in range(int(i*ptc_nums[0]), int((i+1)*ptc_nums[0])):
         ax.plot(xpA[j][0], xpA[j][1], "o", markersize=3, color="tab:blue")
         ax.plot(xpB[j][0], xpB[j][1], "o", markersize=3, color="tab:green")
-        ax.plot(xpC[j][0], xpC[j][1], "o", markersize=3, color="tab:red")
     
     ax.plot(1e+2, 1e+2, "o", markersize=10, color="tab:blue", label="block") 
     ax.plot(1e+3, 1e+3, "s", markersize=10, color="tab:orange", label="Grid", markerfacecolor='none')

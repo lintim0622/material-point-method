@@ -17,6 +17,7 @@ static const double L_cut{ 1e-2 };
 
 class Material {
 public:
+	Material() = delete;
 	Material(double rho, double K, double G);
 	~Material();
 
