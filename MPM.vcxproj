@@ -152,8 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="NODAL POSITION.txt" />
-    <Text Include="PARTICLE INFO A.txt" />
-    <Text Include="PARTICLE INFO B.txt" />
+    <Text Include="PARTICLE INFO.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data_analysis_2D.py" />

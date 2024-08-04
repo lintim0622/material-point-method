@@ -43,13 +43,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="PARTICLE INFO A.txt">
-      <Filter>資源檔</Filter>
-    </Text>
     <Text Include="NODAL POSITION.txt">
       <Filter>資源檔</Filter>
     </Text>
-    <Text Include="PARTICLE INFO B.txt">
+    <Text Include="PARTICLE INFO.txt">
       <Filter>資源檔</Filter>
     </Text>
   </ItemGroup>

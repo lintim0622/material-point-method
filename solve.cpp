@@ -2,56 +2,15 @@
 #include "solve.h"
 
 // ****************************    SOLVE    ***************************************
-//Solve::Solve(const std::string& particleFile, const std::string& nodeFile)
-//{
-//    std::ifstream file(particleFile);
-//    std::string line;
-//    std::unique_ptr<Mesh> mesh;
-//
-//    // Use a map to store material associations
-//    std::unordered_map<int, Material> materials = readMaterials(particleFile);
-//
-//    while (std::getline(file, line))
-//    {
-//        if (line.empty() || line[0] == '#')
-//            continue; // Skip empty lines and comments
-//
-//        if (line.find("Particle") == 0)
-//        {
-//            if (mesh)
-//                _meshs.push_back(std::move(mesh));
-//
-//            int materialID;
-//            std::istringstream iss(line);
-//            std::string word;
-//            iss >> word >> materialID;
-//
-//            // Check if the specified materialID exists
-//            if (materials.find(materialID) != materials.end())
-//            {
-//                mesh = std::make_unique<Mesh>(nodeFile, materials[materialID]);
-//            }
-//            else
-//            {
-//                throw std::runtime_error("Material ID not found: " + std::to_string(materialID));
-//            }
-//        }
-//        else if (mesh)
-//        {
-//            mesh->initParticleInfo(line);
-//        }
-//    }
-//    if (mesh)
-//        _meshs.push_back(std::move(mesh));
-//
-//    file.close();
-//    endTime = 0.0;
-//}
-
-
 Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material)
 {
     std::ifstream file(particleFile);
+    if (!file.is_open()) 
+    {
+        std::cerr << "Error: Unable to open: " << particleFile << std::endl;
+        return;
+    }
+    
     std::string line;
     std::unique_ptr<Mesh> mesh;
 
@@ -109,55 +68,6 @@ void Solve::algorithm(double nowTime, std::vector<Boundary>& bcArray,
         this->updateParticles(*itmsh);
     }
 }
-
-//std::unordered_map<int, Material> Solve::readMaterials(const std::string& filename)
-//{
-//    std::ifstream file(filename);
-//    std::string line;
-//    std::unordered_map<int, Material> materials;
-//
-//    // Check if the file opened successfully
-//    if (!file.is_open()) {
-//        std::cerr << "Failed to open file: " << filename << std::endl;
-//        return materials;
-//    }
-//
-//    // Process each line in the file
-//    while (std::getline(file, line)) {
-//        if (line.empty() || line[0] == '#') {
-//            continue; // Skip empty lines and comments
-//        }
-//
-//        // Check if the line indicates the start of the particle section
-//        if (line.find("Particle") == 0) {
-//            break; // Stop reading when we encounter the first particle line
-//        }
-//
-//        // Parse materials
-//        if (line.find("Material") == 0) {
-//            int materialID;
-//            double rho, K, G;
-//            std::istringstream iss(line);
-//            std::string word;
-//            iss >> word >> materialID; // Read "Material" and the ID
-//            // Read the next line for material properties
-//            if (std::getline(file, line)) {
-//                std::istringstream issProps(line);
-//                issProps >> rho >> K >> G;
-//
-//                // Store the material in the map
-//                materials[materialID] = Material(rho, K, G);
-//            }
-//            else {
-//                std::cerr << "Unexpected end of file when reading material properties for Material " << materialID << std::endl;
-//            }
-//        }
-//    }
-//
-//    file.close();
-//    return materials;
-//}
-
 
 void Solve::calculateParticleInfo(std::unique_ptr<Mesh>& msh) 
 {

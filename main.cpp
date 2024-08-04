@@ -57,6 +57,8 @@ int main() {
 
     // Output the execution time
     std::cout << "Execution time: " << duration.count() << " seconds\n";
+
+    std::cin.get();
     return 0;
 }
 
