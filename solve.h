@@ -14,8 +14,6 @@ public:
 	Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material);
 	~Solve();
 
-	inline void setSimulationTime(double et) { endTime = et; }
-
 	// solution process
 	void algorithm(double nowTime, std::vector<Boundary>& bcArray,
 				   const std::function<double(double)>& decayFunction);
@@ -44,7 +42,6 @@ private:
 	void updateParticles(std::unique_ptr<Mesh>& msh);
 
 	mesh_list _meshs;
-	double endTime;
 };
 
 class Interpolate_Error : public std::runtime_error {

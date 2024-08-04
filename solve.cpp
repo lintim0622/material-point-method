@@ -38,7 +38,6 @@ Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const
     }
 
     file.close();
-    endTime = 0.0;
 }
 
 Solve::~Solve()

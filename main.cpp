@@ -25,7 +25,6 @@ int main() {
 
     // creat solver object
     Solve sol{ PARTICLEFILE, NODEFILE, elastic };
-    sol.setSimulationTime(ENDTIME);
 
     // run
     double t = 0.0;
