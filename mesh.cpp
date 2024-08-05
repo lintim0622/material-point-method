@@ -30,6 +30,13 @@ void Material::verify_time_step(double dt)
     }
 }
 
+void Material::show() const
+{
+    std::cout << "rho = " << this->rho << std::endl;
+    std::cout << "K = " << this->K << std::endl;
+    std::cout << "G = " << this->G << std::endl;
+}
+
 // ****************************    PARTICLE    ***************************************
 // Constructor to initialize member variables
 Particle::Particle() :
@@ -54,16 +61,16 @@ void Particle::calculateMomentum()
     Pp = mp * vp;
 }
 
-void Particle::calculateSpecificStress(const Material& material)
+void Particle::calculateSpecificStress(const Material* material)
 {
     double sp[3]{};
-    sp[0] = material.E1 * ep[0] + material.E2 * ep[1];
-    sp[1] = material.E2 * ep[0] + material.E1 * ep[1];
-    sp[2] = material.G * ep[2];
+    sp[0] = material->E1 * ep[0] + material->E2 * ep[1];
+    sp[1] = material->E2 * ep[0] + material->E1 * ep[1];
+    sp[2] = material->G * ep[2];
 
-    ssp[0] = sp[0] / material.rho;
-    ssp[1] = sp[1] / material.rho;
-    ssp[2] = sp[2] / material.rho;
+    ssp[0] = sp[0] / material->rho;
+    ssp[1] = sp[1] / material->rho;
+    ssp[2] = sp[2] / material->rho;
 }
 
 void Particle::show() const
@@ -110,13 +117,13 @@ bool Element::contains(const Particle& particle) const
 }
 
 // ****************************    MESH    ***************************************
-Mesh::Mesh(const std::string& nodeFile, const Material& material)
+Mesh::Mesh(const std::string& nodeFile, const Material* material)
     : material{ material }
 {
     // initParticleInfo(line, material);
     initNodeInfo(nodeFile);
     createElements();
-    createElementParticleMap();
+    // createElementParticleMap();
 }
 
 Mesh::~Mesh() 

@@ -2,17 +2,57 @@
 #include "solve.h"
 
 // ****************************    SOLVE    ***************************************
-Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material)
+//Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material)
+//{
+//    std::ifstream file(particleFile);
+//    if (!file.is_open()) 
+//    {
+//        std::cerr << "Error: Unable to open: " << particleFile << std::endl;
+//        return;
+//    }
+//    
+//    std::string line;
+//    std::unique_ptr<Mesh> mesh;
+//
+//    while (std::getline(file, line))
+//    {
+//        if (line.empty() || line[0] == '#') {
+//            continue; // Skip comment lines
+//        }
+//
+//        if (line.find("Particle") == 0) // Check if the line starts with "Particle"
+//        {
+//            if (mesh) {
+//                _meshs.push_back(std::move(mesh));
+//            }
+//            mesh = std::make_unique<Mesh>(nodeFile, material);
+//        }
+//        else if (mesh)
+//        {
+//            mesh->initParticleInfo(line);
+//        }
+//    }
+//
+//    if (mesh) {
+//        _meshs.push_back(std::move(mesh));
+//    }
+//
+//    file.close();
+//}
+
+Solve::Solve(const std::string& particleFile, const std::string& nodeFile)
 {
     std::ifstream file(particleFile);
-    if (!file.is_open()) 
+    if (!file.is_open())
     {
         std::cerr << "Error: Unable to open: " << particleFile << std::endl;
         return;
     }
-    
+
     std::string line;
+    std::map<int, std::unique_ptr<Material>> materials;
     std::unique_ptr<Mesh> mesh;
+    int currentParticleID = -1;
 
     while (std::getline(file, line))
     {
@@ -20,12 +60,36 @@ Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const
             continue; // Skip comment lines
         }
 
-        if (line.find("Particle") == 0) // Check if the line starts with "Particle"
+        std::istringstream iss(line);
+        std::string keyword;
+        iss >> keyword;
+
+        if (keyword == "Material")
+        {
+            int materialID;
+            double rho, K, G;
+            iss >> materialID;
+            file >> rho >> K >> G;
+            materials[materialID] = std::make_unique<Material>(rho, K, G);
+        }
+        else if (keyword == "Particle")
         {
             if (mesh) {
+                mesh->createElementParticleMap();
                 _meshs.push_back(std::move(mesh));
             }
-            mesh = std::make_unique<Mesh>(nodeFile, material);
+
+            int particleID;
+            iss >> particleID;
+            currentParticleID = particleID;
+
+            if (materials.find(currentParticleID) == materials.end())
+            {
+                std::cerr << "Error: Material for Particle " << currentParticleID << " not found." << std::endl;
+                return;
+            }
+
+            mesh = std::make_unique<Mesh>(nodeFile, materials[currentParticleID].get());
         }
         else if (mesh)
         {
@@ -34,10 +98,22 @@ Solve::Solve(const std::string& particleFile, const std::string& nodeFile, const
     }
 
     if (mesh) {
+        mesh->createElementParticleMap();
         _meshs.push_back(std::move(mesh));
     }
 
     file.close();
+
+    for (mesh_list::iterator itmsh = _meshs.begin(); itmsh != _meshs.end(); ++itmsh)
+    {
+        (*itmsh)->material->show();
+        for (const std::pair<const int, int>& it : (*itmsh)->pem)
+        {
+            Particle& ip = (*itmsh)->particles[it.first];
+            ip.show();
+        }
+    }
+
 }
 
 Solve::~Solve()
@@ -75,10 +151,10 @@ void Solve::calculateParticleInfo(std::unique_ptr<Mesh>& msh)
         // `it` is of type `const std::pair<const int, int>&`
         Particle& ip = msh->particles[it.first];
         Element& ie = msh->elements[it.second];
-        const Material& material = msh->material;
+        const Material* material = msh->material;
 
         // Calculate particle mass and momentum
-        ip.calculateMass(material);
+        ip.calculateMass(*material);
         ip.calculateMomentum();
 
         // n1 position
@@ -371,11 +447,11 @@ void Solve::contact()
                             {
                                 Vector2D n_A{};
                                 Vector2D n_B{};
-                                if ((*itmsh)->material.E > (*otmsh)->material.E)
+                                if ((*itmsh)->material->E > (*otmsh)->material->E)
                                 {
                                     n_B = -n_rA;
                                 }
-                                else if ((*itmsh)->material.E < (*otmsh)->material.E)
+                                else if ((*itmsh)->material->E < (*otmsh)->material->E)
                                 {
                                     n_B = n_rB;
                                 }
@@ -442,7 +518,7 @@ void Solve::updateParticles(std::unique_ptr<Mesh>& msh)
     for (const std::pair<const int, int>& it : msh->pem) 
     {
         Particle& ip = msh->particles[it.first];
-        const Material& material = msh->material;
+        const Material& material = *(msh->material);
 
         double insp[3] {
             material.E1 * ip.ineps[0] + material.E2 * ip.ineps[1], 

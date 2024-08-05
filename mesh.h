@@ -17,11 +17,11 @@ static const double L_cut{ 1e-2 };
 
 class Material {
 public:
-	Material() = delete;
 	Material(double rho, double K, double G);
 	~Material();
 
 	void verify_time_step(double dt);
+	void show() const;
 
 	double rho;
 	double K;
@@ -31,6 +31,9 @@ public:
 
 	double E1;
 	double E2;
+
+private:
+	Material() = delete;
 };
 
 class Particle {
@@ -40,7 +43,7 @@ public:
 
 	void calculateMass(const Material& material);
 	void calculateMomentum();
-	void calculateSpecificStress(const Material& material);
+	void calculateSpecificStress(const Material* material);
 	void show() const;
 
 	int pid; // id
@@ -101,7 +104,7 @@ public:
 
 class Mesh {
 public:
-	Mesh(const std::string& nodeFile, const Material& material);
+	Mesh(const std::string& nodeFile, const Material* material);
 
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -124,7 +127,7 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	const Material material;
+	const Material* material;;
 
 	// Map particle index to element index
 	std::map<int, int> pem; 

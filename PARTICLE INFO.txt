@@ -1,3 +1,12 @@
+# ----------------- Material ----------------- 
+# rho 	 K 	 G
+Material 1
+  960.0    0.003E+9    0.0006E+9
+
+Material 4
+  950.0    0.003E+9    0.0006E+9
+
+
 # ----------------- Particle ----------------- 
 # ID 	 V 	 X 	 Y 	 VX 	 VY 	 EX 	 EY 	 RXY 	 BX 	 BY 
 Particle 1

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iomanip> // for std::setprecision
 #include <functional> // for std::function
-// #include <unordered_map>
+#include <unordered_map>
 
 #include "mesh.h"
 
@@ -11,7 +11,7 @@ typedef std::vector<std::unique_ptr<Mesh>> mesh_list;
 class Boundary;
 class Solve {
 public:
-	Solve(const std::string& particleFile, const std::string& nodeFile, const Material& material);
+	Solve(const std::string& particleFile, const std::string& nodeFile);
 	~Solve();
 
 	// solution process

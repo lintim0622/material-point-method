@@ -19,34 +19,34 @@ int main() {
     // creat boundary object
     std::vector<Boundary> bcArray{ bcSet() };
 
-    // creat material object
-    Material elastic{ RHO, K, G };
-    elastic.verify_time_step(DT);
+    //// creat material object
+    //Material elastic{ RHO, K, G };
+    //elastic.verify_time_step(DT);
 
     // creat solver object
-    Solve sol{ PARTICLEFILE, NODEFILE, elastic };
+    Solve sol{ PARTICLEFILE, NODEFILE };
 
-    // run
-    double t = 0.0;
-    int step = 0;
-    int print_interval = static_cast<int>(round(1 / DT) / 10);
-    while (t <= ENDTIME)
-    {
-        // main process
-        sol.algorithm(t, bcArray, decayFunction);
+    //// run
+    //double t = 0.0;
+    //int step = 0;
+    //int print_interval = static_cast<int>(round(1 / DT) / 10);
+    //while (t <= ENDTIME)
+    //{
+    //    // main process
+    //    sol.algorithm(t, bcArray, decayFunction);
 
-        // output
-        sol.data_output("particle_output", "node_output", true);
+    //    // output
+    //    sol.data_output("particle_output", "node_output", true);
 
-        // reset nodal value
-        sol.resetNode();
+    //    // reset nodal value
+    //    sol.resetNode();
 
-        if (step % print_interval == 0)
-            std::cout << "t = " << t << std::endl;
+    //    if (step % print_interval == 0)
+    //        std::cout << "t = " << t << std::endl;
 
-        t += DT;
-        step++;
-    }
+    //    t += DT;
+    //    step++;
+    //}
 
     // Get the end time
     auto end = std::chrono::high_resolution_clock::now();
