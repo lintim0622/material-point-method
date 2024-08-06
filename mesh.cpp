@@ -12,7 +12,10 @@ Material::Material(double rho = 0.0, double K = 0.0, double G = 0.0) :
     E2 = v * E / (1.0 - v * v);
 }
 
-Material::~Material() {}
+Material::~Material() 
+{
+    std::cout << "no\n";
+}
 
 void Material::verify_time_step(double dt)
 {
@@ -117,7 +120,7 @@ bool Element::contains(const Particle& particle) const
 }
 
 // ****************************    MESH    ***************************************
-Mesh::Mesh(const std::string& nodeFile, const Material* material)
+Mesh::Mesh(const std::string& nodeFile, const Material& material)
     : material{ material }
 {
     // initParticleInfo(line, material);
@@ -146,7 +149,7 @@ void Mesh::initParticleInfo(const std::string& line)
         >> ip.ep[0] >> ip.ep[1] >> ip.ep[2]
         >> ip.bp[0] >> ip.bp[1];
 
-    ip.calculateSpecificStress(material);
+    ip.calculateSpecificStress(&material);
 
     if (ip.Vol != 0.0)
         particles.push_back(ip);

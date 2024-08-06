@@ -25,28 +25,29 @@ int main() {
 
     // creat solver object
     Solve sol{ PARTICLEFILE, NODEFILE };
+    std::cout << "1\n";
 
-    //// run
-    //double t = 0.0;
-    //int step = 0;
-    //int print_interval = static_cast<int>(round(1 / DT) / 10);
-    //while (t <= ENDTIME)
-    //{
-    //    // main process
-    //    sol.algorithm(t, bcArray, decayFunction);
+    // run
+    double t = 0.0;
+    int step = 0;
+    int print_interval = static_cast<int>(round(1 / DT) / 10);
+    while (t <= ENDTIME)
+    {
+        // main process
+        sol.algorithm(t, bcArray, decayFunction);
 
-    //    // output
-    //    sol.data_output("particle_output", "node_output", true);
+        // output
+        sol.data_output("particle_output", "node_output", true);
 
-    //    // reset nodal value
-    //    sol.resetNode();
+        // reset nodal value
+        sol.resetNode();
 
-    //    if (step % print_interval == 0)
-    //        std::cout << "t = " << t << std::endl;
+        if (step % print_interval == 0)
+            std::cout << "t = " << t << std::endl;
 
-    //    t += DT;
-    //    step++;
-    //}
+        t += DT;
+        step++;
+    }
 
     // Get the end time
     auto end = std::chrono::high_resolution_clock::now();
@@ -57,7 +58,7 @@ int main() {
     // Output the execution time
     std::cout << "Execution time: " << duration.count() << " seconds\n";
 
-    std::cin.get();
+    // std::cin.get();
     return 0;
 }
 
@@ -71,20 +72,30 @@ static std::vector<Boundary> bcSet()
     Boundary bc3{ "slip", Vector2D(bcvalue,   bcvalue), Vector2D(-bcvalue,  bcvalue) };
     Boundary bc4{ "slip", Vector2D(-bcvalue,  bcvalue), Vector2D(-bcvalue, -bcvalue) };
 
+    Boundary bcl{ "sticky", Vector2D(-1.25, -0.25), Vector2D(-1.25, 0.0) };
+    Boundary bcr{ "sticky", Vector2D(1.25,  -0.25), Vector2D( 1.25, 0.0) };
+
     bc1.setNbc(Vector2D(0.0,  1.0));
     bc2.setNbc(Vector2D(-1.0, 0.0));
     bc3.setNbc(Vector2D(0.0, -1.0));
     bc4.setNbc(Vector2D(1.0,  0.0));
 
+    bcl.setNbc(Vector2D( 1.0, 0.0));
+    bcr.setNbc(Vector2D(-1.0, 0.0));
+
     bc1.setMu(0.0);
     bc2.setMu(0.0);
     bc3.setMu(0.0);
     bc4.setMu(0.0);
+    bcl.setMu(0.0);
+    bcr.setMu(0.0);
 
     bcArray.push_back(bc1);
     bcArray.push_back(bc2);
     bcArray.push_back(bc3);
     bcArray.push_back(bc4);
+    bcArray.push_back(bcl);
+    bcArray.push_back(bcr);
 
     return bcArray;
 }

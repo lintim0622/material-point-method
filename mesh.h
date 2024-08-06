@@ -104,7 +104,7 @@ public:
 
 class Mesh {
 public:
-	Mesh(const std::string& nodeFile, const Material* material);
+	Mesh(const std::string& nodeFile, const Material& material);
 
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -127,7 +127,7 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	const Material* material;;
+	const Material& material;
 
 	// Map particle index to element index
 	std::map<int, int> pem; 

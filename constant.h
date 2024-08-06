@@ -15,7 +15,7 @@ static const double TOL = 1e-10;
 
 // Simulation Time
 static const double DT = 1e-4;
-static const double ENDTIME = 0.5;
+static const double ENDTIME = 1e-4;
 
 //// material property
 //static const double RHO = 960.0;
