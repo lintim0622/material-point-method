@@ -25,7 +25,6 @@ int main() {
 
     // creat solver object
     Solve sol{ PARTICLEFILE, NODEFILE };
-    std::cout << "1\n";
 
     // run
     double t = 0.0;

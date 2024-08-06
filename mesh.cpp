@@ -1,20 +1,32 @@
 #include "mesh.h"
 
 // ****************************    MATERIAL    ***************************************
-Material::Material(double rho = 0.0, double K = 0.0, double G = 0.0) :
+Material::Material(double rho, double K, double G) :
     rho{ rho }, K{ K }, G{ G }
 {
+    //std::cout << "Material initialized with rho = " << rho
+    //    << ", K = " << K << ", G = " << G << std::endl;
+
+    if (rho <= 0 || K <= 0 || G <= 0) {
+        std::cerr << "Error: Invalid material parameters" << std::endl;
+        return;
+    }
+
     E = 9.0 * K * G / (3.0 * K + G);
     v = 0.5 * (3.0 * K - 2.0 * G) / (3.0 * K + G); // poisson
 
     // plane stress
     E1 = E / (1.0 - v * v);
     E2 = v * E / (1.0 - v * v);
+
+    //std::cout << "Material properties computed: E = " << E
+    //    << ", v = " << v << ", E1 = " << E1 << ", E2 = " << E2 << std::endl;
 }
+
 
 Material::~Material() 
 {
-    std::cout << "no\n";
+    // std::cout << "Material destroyed: " << this << std::endl;
 }
 
 void Material::verify_time_step(double dt)
@@ -54,9 +66,9 @@ Particle::Particle() :
 // Destructor to clean up resources
 Particle::~Particle() {}
 
-void Particle::calculateMass(const Material& material)
+void Particle::calculateMass(const std::shared_ptr<Material>& material)
 {
-    mp = material.rho * Vol;
+    mp = material->rho * Vol;
 }
 
 void Particle::calculateMomentum()
@@ -64,7 +76,7 @@ void Particle::calculateMomentum()
     Pp = mp * vp;
 }
 
-void Particle::calculateSpecificStress(const Material* material)
+void Particle::calculateSpecificStress(const std::shared_ptr<Material>& material)
 {
     double sp[3]{};
     sp[0] = material->E1 * ep[0] + material->E2 * ep[1];
@@ -120,7 +132,7 @@ bool Element::contains(const Particle& particle) const
 }
 
 // ****************************    MESH    ***************************************
-Mesh::Mesh(const std::string& nodeFile, const Material& material)
+Mesh::Mesh(const std::string& nodeFile, std::shared_ptr<Material>& material)
     : material{ material }
 {
     // initParticleInfo(line, material);
@@ -149,7 +161,7 @@ void Mesh::initParticleInfo(const std::string& line)
         >> ip.ep[0] >> ip.ep[1] >> ip.ep[2]
         >> ip.bp[0] >> ip.bp[1];
 
-    ip.calculateSpecificStress(&material);
+    ip.calculateSpecificStress(material);
 
     if (ip.Vol != 0.0)
         particles.push_back(ip);

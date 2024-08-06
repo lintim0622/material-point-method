@@ -41,9 +41,9 @@ public:
 	Particle();
 	~Particle();
 
-	void calculateMass(const Material& material);
+	void calculateMass(const std::shared_ptr<Material>& material);
 	void calculateMomentum();
-	void calculateSpecificStress(const Material* material);
+	void calculateSpecificStress(const std::shared_ptr<Material>& material);
 	void show() const;
 
 	int pid; // id
@@ -104,7 +104,7 @@ public:
 
 class Mesh {
 public:
-	Mesh(const std::string& nodeFile, const Material& material);
+	Mesh(const std::string& nodeFile, std::shared_ptr<Material>& material);
 
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -127,7 +127,7 @@ public:
 	std::vector<Particle> particles;
 	std::vector<Node> nodes;
 	std::vector<Element> elements;
-	const Material& material;
+	std::shared_ptr<Material> material;
 
 	// Map particle index to element index
 	std::map<int, int> pem; 
